@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Singular Learning Theory: Basics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ---------- tokens ---------- */
+:root{
+  --paper:#FCFCFA; --paper-2:#F3F3EE; --ink:#1C1E24; --ink-2:#4B4F5A; --ink-3:#7A7E88; --rule:#DCDCD4;
+  --blue:#1E4FD8; --red:#C8102E; --green:#0E7C4A; --purple:#6D3FC4; --teal:#0F766E; --amber:#B45309; --grey:#5F6470;
+  --blue-bg:#EEF2FD; --red-bg:#FCEEF0; --green-bg:#EAF6F0; --purple-bg:#F2EDFB; --teal-bg:#E7F4F2; --amber-bg:#FBF1E4; --grey-bg:#F1F2F4;
+  --link:#1E4FD8; --flash:#FFF3B0;
+  --shadow:0 8px 24px rgba(20,22,27,.14);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#14161B; --paper-2:#1C1F26; --ink:#E8E6E0; --ink-2:#B7B9C0; --ink-3:#858994; --rule:#2C3039;
+    --blue:#7FA0F5; --red:#F07A8C; --green:#5CC79A; --purple:#B79AF0; --teal:#5FC3B7; --amber:#F0B461; --grey:#A3A8B3;
+    --blue-bg:#1A2236; --red-bg:#2E1A20; --green-bg:#152A21; --purple-bg:#241C36; --teal-bg:#132A28; --amber-bg:#2E2416; --grey-bg:#1F2229;
+    --link:#7FA0F5; --flash:#4A3F12;
+    --shadow:0 8px 24px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14161B; --paper-2:#1C1F26; --ink:#E8E6E0; --ink-2:#B7B9C0; --ink-3:#858994; --rule:#2C3039;
+  --blue:#7FA0F5; --red:#F07A8C; --green:#5CC79A; --purple:#B79AF0; --teal:#5FC3B7; --amber:#F0B461; --grey:#A3A8B3;
+  --blue-bg:#1A2236; --red-bg:#2E1A20; --green-bg:#152A21; --purple-bg:#241C36; --teal-bg:#132A28; --amber-bg:#2E2416; --grey-bg:#1F2229;
+  --link:#7FA0F5; --flash:#4A3F12;
+  --shadow:0 8px 24px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+
+/* ---------- base ---------- */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-size:17px;line-height:1.6;}
+a{color:var(--link);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--link) 40%,transparent)}
+a:hover{border-bottom-color:var(--link)}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+h1,h2,h3{font-family:"Newsreader",Georgia,serif;font-weight:500;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:2.6rem;font-weight:400;letter-spacing:-.01em}
+h2{font-size:1.75rem;margin-top:3.2rem;margin-bottom:.9rem;padding-top:1.2rem;border-top:1px solid var(--rule)}
+h3{font-size:1.25rem;margin-top:2.2rem;margin-bottom:.6rem}
+h2 .num,h3 .num{color:var(--ink-3);font-variant-numeric:tabular-nums;margin-right:.55em;font-weight:400}
+p{margin:.75rem 0}
+ul,ol{padding-left:1.4rem;margin:.6rem 0}
+li{margin:.25rem 0}
+u{text-decoration-thickness:1px;text-underline-offset:3px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+hr.sep{border:0;border-top:1px solid var(--rule);margin:2.5rem 0}
+
+/* ---------- layout ---------- */
+.wrap{display:grid;grid-template-columns:1fr;max-width:1200px;margin:0 auto;padding:0 1.25rem}
+@media (min-width:1080px){.wrap{grid-template-columns:230px minmax(0,1fr);gap:3rem}}
+main{max-width:70ch;margin:0 auto;padding-bottom:6rem;min-width:0}
+@media (min-width:1080px){main{margin:0}}
+nav.toc{display:none}
+@media (min-width:1080px){
+  nav.toc{display:block;position:sticky;top:1.5rem;align-self:start;max-height:calc(100vh - 3rem);overflow:auto;padding:2.2rem 0 1rem;font-size:.86rem;line-height:1.35}
+  nav.toc ol{list-style:none;padding:0;margin:0}
+  nav.toc li{margin:.28rem 0}
+  nav.toc li.l3{padding-left:1rem;font-size:.8rem}
+  nav.toc a{color:var(--ink-2);border:0;display:block;padding:.1rem 0 .1rem .6rem;border-left:2px solid transparent}
+  nav.toc a.active{color:var(--ink);border-left-color:var(--red)}
+  nav.toc a:hover{color:var(--ink)}
+  nav.toc .toc-tools{margin-top:1.2rem;padding-top:.8rem;border-top:1px solid var(--rule)}
+}
+header.masthead{padding:3.5rem 0 1.5rem}
+header.masthead .disclaimer{font-size:.95rem;line-height:1.55;color:var(--ink-2);margin:1rem 0 0;padding-left:.9rem;border-left:2px solid var(--rule);max-width:62ch}
+header.masthead .meta{margin-top:1.1rem;display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:1.4rem;font-size:.8rem;color:var(--ink-2)}
+.legend span::before{content:"";display:inline-block;width:.6em;height:.6em;border-radius:50%;margin-right:.4em;background:var(--c);vertical-align:-.02em}
+button.tool{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);background:transparent;border:1px solid var(--rule);border-radius:3px;padding:.3rem .55rem;cursor:pointer}
+button.tool:hover{border-color:var(--ink-3);color:var(--ink)}
+
+/* ---------- equations & refs ---------- */
+.eq{position:relative;margin:.9rem 0;padding-right:3.2rem;overflow-x:auto;overflow-y:hidden;scroll-margin-top:5rem}
+.eq mjx-container[display="true"]{margin:.35rem 0!important}
+.eq .eqno{position:absolute;right:0;top:50%;transform:translateY(-50%);font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--ink-3);border:0;padding:.1rem .25rem}
+.eq .eqno:hover{color:var(--ink)}
+.eq.flash,.callout.flash,figure.flash,h2.flash,h3.flash,.ref-target.flash,.tblwrap.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{background:var(--flash)}100%{background:transparent}}
+.eq.boxed mjx-container{padding:.3rem .6rem}
+a.ref,a.cite{white-space:nowrap}
+a.cite{font-family:"IBM Plex Mono",monospace;font-size:.82em}
+.popover{position:absolute;z-index:50;max-width:min(560px,92vw);background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:4px;box-shadow:var(--shadow);padding:.6rem .9rem;font-size:.92rem;line-height:1.45;pointer-events:none;overflow:hidden}
+.popover .eq{padding-right:0;margin:0}
+.popover .eqno{display:none}
+.popover .callout{margin:0;max-height:260px;overflow:hidden}
+.popover .pop-label{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:.25rem}
+.popover figure{margin:0}.popover figure .figbody{display:none}.popover figcaption{font-size:.85rem}
+.popover details{display:block}.popover details summary{display:none}.popover details>*{display:block}
+#backbtn{position:fixed;right:1rem;bottom:1rem;z-index:40;display:none;font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:0;border-radius:999px;padding:.55rem .9rem;cursor:pointer;box-shadow:var(--shadow)}
+#backbtn.show{display:block}
+
+/* ---------- callouts ---------- */
+.callout{margin:1.2rem 0;padding:.75rem 1rem .8rem 1.1rem;border-left:3px solid var(--c);background:var(--cbg);border-radius:0 4px 4px 0;scroll-margin-top:5rem}
+.callout .head{display:flex;flex-wrap:wrap;gap:.2rem .6rem;align-items:baseline;margin-bottom:.35rem}
+.callout .kind{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--c);font-weight:500}
+.callout .ttl{font-family:"Newsreader",serif;font-size:1.08rem;font-weight:500;color:var(--ink)}
+.callout>p:first-of-type{margin-top:.2rem}
+.callout>:last-child{margin-bottom:.1rem}
+.callout .eq{padding-right:2.6rem}
+.def{--c:var(--blue);--cbg:var(--blue-bg)}
+.int{--c:var(--red);--cbg:var(--red-bg)}
+.ex{--c:var(--green);--cbg:var(--green-bg)}
+.rem{--c:var(--purple);--cbg:var(--purple-bg)}
+.ahead{--c:var(--teal);--cbg:var(--teal-bg)}
+.warn{--c:var(--amber);--cbg:var(--amber-bg)}
+.der{--c:var(--grey);--cbg:var(--grey-bg)}
+details.callout{padding:0}
+details.callout summary{list-style:none;cursor:pointer;padding:.7rem 1rem .7rem 1.1rem;display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+details.callout summary::-webkit-details-marker{display:none}
+details.callout summary::before{content:"▸";font-family:"IBM Plex Mono",monospace;color:var(--c);transition:transform .15s}
+details.callout[open] summary::before{transform:rotate(90deg)}
+details.callout summary .hint{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+details.callout .body{padding:0 1rem .9rem 1.1rem}
+
+/* ---------- tables ---------- */
+.tblwrap{overflow-x:auto;margin:1rem 0}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th{text-align:left;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:500;padding:.4rem .6rem .4rem 0;border-bottom:1px solid var(--ink-3)}
+td{padding:.45rem .6rem .45rem 0;border-bottom:1px solid var(--rule);vertical-align:top}
+td:first-child{white-space:nowrap}
+.notation td:first-child{white-space:normal;width:36%}
+.notation td:nth-child(2){width:27%}
+.notation th:first-child{width:36%}.notation th:nth-child(2){width:27%}
+.notation td:nth-child(3){color:var(--ink-2);font-size:.9rem}
+table caption{caption-side:bottom;text-align:left;font-size:.85rem;color:var(--ink-2);padding:.5rem 0}
+.diagram{overflow-x:auto}
+
+/* ---------- figures ---------- */
+figure{margin:1.6rem 0;scroll-margin-top:5rem}
+figure .figbody{background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;padding:.9rem;overflow:hidden}
+figcaption{font-size:.88rem;color:var(--ink-2);margin-top:.55rem;line-height:1.45}
+figcaption .figno{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-right:.5em}
+.controls{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;align-items:center;margin-bottom:.7rem;font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--ink-2)}
+.controls label{display:flex;align-items:center;gap:.45rem}
+.controls input[type=range]{width:130px;accent-color:var(--red)}
+.controls select{font:inherit;font-size:.76rem;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:.15rem .3rem}
+.controls .val{min-width:5ch;color:var(--ink);font-variant-numeric:tabular-nums}
+.controls .seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.controls .seg button{font:inherit;background:transparent;color:var(--ink-2);border:0;padding:.25rem .55rem;cursor:pointer}
+.controls .seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.panels{display:grid;gap:.8rem;grid-template-columns:1fr}
+@media (min-width:640px){.panels.two{grid-template-columns:1fr 1fr}.panels.three{grid-template-columns:1fr 1fr 1fr}}
+.panel{min-width:0}
+.panel .plab{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--ink-3);margin-bottom:.3rem;text-align:center}
+canvas,svg.plot{display:block;width:100%;height:auto}
+.readout{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--ink-2);margin-top:.5rem;font-variant-numeric:tabular-nums}
+.readout b{color:var(--ink);font-weight:500}
+svg.plot text{font-family:"IBM Plex Mono",monospace;font-size:10px;fill:var(--ink-2)}
+svg.plot .axis{stroke:var(--ink-3);stroke-width:1}
+svg.plot .grid{stroke:var(--rule);stroke-width:1}
+
+/* ---------- refs list ---------- */
+.refs{list-style:none;padding:0}
+.refs li{display:grid;grid-template-columns:5.5em 1fr;gap:.6rem;margin:.6rem 0;scroll-margin-top:5rem}
+.refs .key{font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--ink-2)}
+.refs .note{color:var(--ink-2);font-size:.9rem}
+.circ{display:inline-block;width:1.35em;height:1.35em;border-radius:50%;border:1px solid currentColor;text-align:center;line-height:1.3em;font-size:.78em;margin-right:.35em;vertical-align:.05em}
+.next{font-family:"Newsreader",serif;font-size:1.15rem}
+</style>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'],['\\(','\\)']],
+    displayMath: [['$$','$$'],['\\[','\\]']],
+    processEscapes: true,
+    macros: {
+      X: '\\mathcal{X}', R: '\\mathbb{R}', E: '\\mathbb{E}', KL: '\\mathrm{KL}', Vol: '\\mathrm{Vol}',
+      dd: '\\,\\mathrm{d}', Dn: 'D_n', Wz: 'W_0', ws: 'w^{*}', eps: '\\varepsilon', gr: '\\nabla',
+      pw: 'p(\\,\\cdot\\,|\\,w)', Zn: 'Z_n', Znz: 'Z^{(0)}_n', Fn: 'F_n',
+      argmin: '\\mathop{\\mathrm{arg\\,min}}', argmax: '\\mathop{\\mathrm{arg\\,max}}', N: '\\mathcal{N}'
+    }
+  },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  startup: { typeset: true }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" id="MathJax-script" async></script>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="Sections"><div class="eyebrow" style="margin-bottom:.6rem">Contents</div><ol id="toclist"></ol>
+<div class="toc-tools"><button class="tool" id="toggle-der">Expand derivations</button></div></nav>
+
+<main>
+<header class="masthead">
+  <div class="eyebrow">Informal notes</div>
+  <h1>Singular Learning Theory: Basics</h1>
+  <p class="disclaimer">These are informal notes I originally sketched on my iPad while reading a variety of sources on SLT, starting primarily with Zach Furman's lectures at the Iliad intensive in Berkeley in August 2026; any errors are mine, or transcription errors by Claude, which I asked to turn my handwritten notes and figures into this interactive page, so there may also be some notational clashes. Since I spent so much time writing these notes, this transcription is primarily meant for self-reference, and I'm making it public in case it is helpful to anyone else. Much of it may be rewriting things that seem obvious, but that is just the way I wrote stuff down explicitly and thought about things.</p>
+  <div class="meta"><span class="eyebrow">Siddharth Setlur · September 2026</span> <button class="tool" id="toggle-der-2">Expand derivations</button></div>
+  <div class="legend" aria-label="Callout colours">
+    <span style="--c:var(--blue)">Definition</span><span style="--c:var(--red)">Intuition</span><span style="--c:var(--green)">Example</span><span style="--c:var(--purple)">Remark</span><span style="--c:var(--teal)">Looking ahead</span><span style="--c:var(--grey)">Derivation (click to expand)</span>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- ============================================================ -->
+<h2 id="sec:notation">Notation</h2>
+
+<div class="tblwrap"><table class="notation">
+<thead><tr><th>Symbol</th><th>Meaning</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>$\X$</td><td>sample space of training data</td><td>measurable space</td></tr>
+<tr><td>$x$</td><td>single training datum</td><td>$x\in\X$</td></tr>
+<tr><td>$q(x)$</td><td>true distribution, <u>unknown</u></td><td>probability density on $\X$</td></tr>
+<tr><td>$\Dn=\{x_1,\dots,x_n\}$</td><td>dataset of size $n$ drawn i.i.d. from $q$</td><td>training data</td></tr>
+<tr><td>$n$</td><td>sample size</td><td></td></tr>
+<tr><td>$W\subset\R^d$</td><td>parameter space, $W$ compact</td><td>the collection of weights of a transformer, e.g. attention, MLP etc.</td></tr>
+<tr><td>$w$</td><td>$w\in W$</td><td>a specific choice of parameter, e.g. a setting of the attention and MLP weights in a transformer</td></tr>
+<tr><td>$d$</td><td>$\dim W$</td><td></td></tr>
+<tr><td>$\pw$</td><td>for each $w\in W$, a distribution on $\X$. Called a <em>model</em>.</td><td>p.d.f. on $\X$ for each parameter $w$. The map $w\mapsto\pw$ is the <em>parameter–function map</em>.</td></tr>
+<tr><td>$\varphi(w)$</td><td>prior on $W$</td><td>density on $W$</td></tr>
+<tr><td>$s(x,w)=\gr_w\log p(x|w)$</td><td>score, the gradient of the log-likelihood</td><td>vector in $\R^d$. A function of $x$ <em>and</em> $w$!</td></tr>
+<tr><td>$I(w)$</td><td>Fisher information at $w\in W$</td><td>see <a class="ref" data-ref="sec:fisher"></a></td></tr>
+<tr><td>$L_n(w)=\sum_{i=1}^n\log p(x_i|w)$</td><td>log-likelihood of $\Dn$ at parameter $w$</td><td>random function on $W$. (Watanabe's $L_n(w)$ is the average <em>negative</em> log-likelihood, $-\frac1n L_n(w)$ in our notation.)</td></tr>
+<tr><td>$\ell(w)=\E_q[\log p(x|w)]$ $=\int_\X\log p(x|w)\,q(x)\dd x$</td><td>population log-likelihood</td><td>deterministic function on $W$. $\ell(w)$ is purely theoretical, since $q$ is unknown.</td></tr>
+<tr><td>$K(w)=\KL(q\,\|\,\pw)$</td><td>population loss</td><td>deterministic on $W$. <strong>The loss landscape of $W$. This function's geometry is our object of study.</strong></td></tr>
+<tr><td>$K_n(w)=\frac1n\sum_{i=1}^n\log\frac{q(x_i)}{p(x_i|w)}$</td><td>empirical loss</td><td>random on $W$, $\E[K_n]=K$</td></tr>
+<tr><td>$\Wz=\argmin_w K(w)$</td><td>optimal parameter set</td><td></td></tr>
+<tr><td>$\eps$</td><td>KL-sublevel threshold</td><td></td></tr>
+<tr><td>$V(\eps)=\int_{K(w)&lt;\eps}\varphi(w)\dd w$</td><td>volume function</td><td></td></tr>
+<tr><td>$\lambda$</td><td>real log canonical threshold (RLCT)</td><td></td></tr>
+<tr><td>$m$</td><td>multiplicity of $\lambda$</td><td>see <a class="ref" data-ref="def:rlct"></a></td></tr>
+<tr><td>$\Zn=\int_W\prod_{i=1}^n p(x_i|w)\,\varphi(w)\dd w$ $=\prod_{i=1}^n p(x_i|x_1,\dots,x_{i-1})$</td><td>evidence, marginal likelihood</td><td>This is the distribution of each datum given the context seen so far, updating from the prior one datum at a time: $Z_1=p(x_1)$, $Z_2=p(x_2|x_1)\,p(x_1)$, $Z_3=p(x_3|x_1,x_2)\,p(x_2|x_1)\,p(x_1)$, …</td></tr>
+<tr><td>$\Fn=-\log\Zn$ $=-\sum_{i=1}^n\log p(x_i|x_1,\dots,x_{i-1})$</td><td>free energy</td><td></td></tr>
+<tr><td>$S_n=-\frac1n\sum_{i=1}^n\log q(x_i)$ $=-\frac1n\log\big(\prod_{i=1}^n q(x_i)\big)$</td><td>entropy of the true distribution</td><td>random, a property of $q$</td></tr>
+<tr><td>$S=-\E_q[\log q(x)]$</td><td>population entropy</td><td>$S_n\to S$ as $n\to\infty$</td></tr>
+<tr><td>$\pi\in[0,1]$</td><td>mixture weight</td><td></td></tr>
+<tr><td>$\beta$</td><td>inverse temperature</td><td></td></tr>
+<tr><td>$\Znz=\dfrac{\Zn}{\prod_{i=1}^n q(x_i)}$ $=\int_W e^{-nK_n(w)}\varphi(w)\dd w$</td><td>normalized evidence, $\Zn$ relative to the truth</td><td>see $S_n$ above and <a class="ref" data-ref="eq:prod-p-K"></a></td></tr>
+</tbody></table></div>
+
+<div class="callout rem" id="rem:q-dep" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">which quantities depend on $q$</span></div>
+<ul>
+<li>$\ell,\ K,\ K_n,\ S_n$ depend explicitly on the true distribution $q$.</li>
+<li>$L_n$ depends on $q$ only implicitly (the data are drawn from $q$).</li>
+<li>$p(x|w),\ \varphi(w),\ W$ are all independent of $q$.</li>
+</ul>
+<p>Note that</p>
+<div class="eq" id="eq:Ln-Kn-Sn">$$-\frac1n L_n(w) = K_n(w) + S_n ,$$</div>
+<p>since</p>
+<div class="eq nonum">$$\begin{aligned}
+  \text{LHS}:\ -\frac1n L_n(w) &= -\frac1n\sum_{i=1}^n\log p(x_i|w)\\
+  \text{RHS}:\ K_n(w)+S_n &= \frac1n\sum_{i=1}^n\log\frac{q(x_i)}{p(x_i|w)} - \frac1n\sum_{i=1}^n\log q(x_i)\\
+  &= \frac1n\sum_{i=1}^n\Big(\cancel{\log q(x_i)} - \log p(x_i|w) - \cancel{\log q(x_i)}\Big)\\
+  &= -\frac1n\sum_{i=1}^n\log p(x_i|w) = \text{LHS}.
+\end{aligned}$$</div>
+<p><strong>So</strong> $K_n(w)$ is basically $L_n(w)$ up to $S_n$, which does not depend on the model, only on $q$.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec:learning-problem">The Learning Problem</h2>
+
+<p><strong>Setup.</strong> A learning problem is a triple $(p,q,\varphi)$:</p>
+<ul>
+<li>$p$: a model, a distribution on $\X$ for each parameter setting;</li>
+<li>$q$: what we want to learn;</li>
+<li>$\varphi$: a prior, our best guess as to which $w\in W$ gives us the lowest loss.</li>
+</ul>
+
+<div class="callout def" id="def:realizable" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Realizable</span></div>
+<p>There exists $w\in W$ such that $\pw=q(\cdot)$. Equivalently,</p>
+<div class="eq nonum">$$\Wz:=\{w\in W\mid K(w)=0\}\neq\emptyset .$$</div>
+</div>
+
+<p>A <strong>Bayesian learning machine</strong> outputs a distribution on $W$, having seen a dataset $\Dn$:</p>
+<div class="eq" id="eq:posterior">$$p(w|\Dn)=\frac{\prod_{i=1}^n p(x_i|w)\,\varphi(w)}{\displaystyle\int_W\prod_{i=1}^n p(x_i|w')\,\varphi(w')\dd w'} .$$</div>
+<p>The numerator is the likelihood function on $W$. Note that here we vary $w$ and not $x$.</p>
+
+<div class="callout rem" id="rem:two-slots" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">$p(x|w)$ has two slots</span></div>
+<ol>
+<li>Hold $w$ fixed and vary $x$. This yields a distribution on $\X$:
+<div class="eq nonum">$$w\longmapsto \pw \qquad\text{and}\qquad \int_\X p(x|w)\dd x = 1 .$$</div>
+This is the parameter–function map.</li>
+<li>Hold $x$ fixed and vary $w$:
+<div class="eq nonum">$$w\longmapsto p(x|w)\ \text{ for fixed }x,\qquad\text{but}\qquad \int_W p(x|w)\dd w\neq 1 ,$$</div>
+so this is not a distribution on $W$.</li>
+</ol>
+</div>
+
+<p>We are interested in the loss landscape, i.e. what happens when we vary $w$? What does the geometry look like?</p>
+
+<div class="callout ahead" data-kind="ahead"><div class="head"><span class="kind">Looking ahead</span><span class="ttl">why we bother; repeated from <a class="ref" data-ref="sec:phase-transitions"></a></span></div>
+<p>One of the payoffs of building this machinery is that it may offer an explanation for phenomena we see in deep learning, like phase transitions (which are not explained by regular models). <em>Caution:</em> this assumes SGD shares characteristics with Bayesian learning. Completely heuristic, as far as I know.</p>
+</div>
+
+<h3 id="sec:factorize">The loss landscape factorizes</h3>
+<div class="eq nonum">$$W\xrightarrow{\ \Psi\ }\text{Dist on }\X\xrightarrow{\ \eta\ }\R_{\ge 0},\qquad w\longmapsto \pw\longmapsto \KL(q\,\|\,p).$$</div>
+<p>Now note that $K(w)=\KL(q\,\|\,\pw)$ trivially factorizes as</p>
+<div class="eq" id="eq:factorize">$$K = \eta\circ\Psi .$$</div>
+<p>$\Psi$ takes $w$ and gives a distribution. $\eta$ measures how far this distribution is from $q$.</p>
+<ul>
+<li>$\eta$ is a “nice map”: no degeneracies, convex, a unique zero at $q$. It knows nothing about the model.</li>
+<li>$\Psi$ is where the weird geometry lives, but it has nothing to do with $q$.</li>
+</ul>
+
+<div class="callout int" id="int:pullback" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">pulling back the bowl</span></div>
+<p>$\eta$ gives a nice bowl on $\mathrm{Dist}(\X)$ with a unique minimum at $q(x)$. We then pull this bowl back via $\Psi$, which might be degenerate. See <a class="ref" data-ref="fig:pullback"></a>:</p>
+<div class="eq nonum">$$\Wz=\Psi^{-1}(q)=\{w\in W\mid \Psi(w)=q\}.$$</div>
+</div>
+
+<figure id="fig:pullback" data-kind="fig">
+<div class="figbody">
+  <div class="controls">
+    <label>model $\mu(w)$ <select id="pb-model">
+      <option value="ab">ab (symmetric, Ex. 2)</option>
+      <option value="ab2">ab² (asymmetric, Ex. 3)</option>
+      <option value="apb">a+b (redundant)</option>
+      <option value="bowl">regular bowl ½(a²+b²)</option>
+    </select></label>
+    <label>$\eps$ <input type="range" id="pb-eps" min="-4" max="-0.5" step="0.05" value="-1.7"> <span class="val" id="pb-eps-val"></span></label>
+  </div>
+  <div class="panels two">
+    <div class="panel"><div class="plab">Parameter space W  —  shaded: {K &lt; ε},  red: W₀ = Ψ⁻¹(q)</div><canvas id="pb-left" width="360" height="360"></canvas></div>
+    <div class="panel"><div class="plab">Space of distributions on X  —  level sets of KL(q ‖ ·)</div><svg class="plot" id="pb-right" viewBox="0 0 360 360"></svg></div>
+  </div>
+  <div class="readout" id="pb-read"></div>
+</div>
+<figcaption>The KL bowl on the space of distributions (right; unique minimum at $q$, dotted level sets) and its pullback to parameter space via $\Psi$ (left). Move $\eps$ to see the level set $\KL(q\|\cdot)=\eps$ on the right and its pullback $\{K&lt;\eps\}$ on the left. $\Wz=\Psi^{-1}(q)$ need not be a point.</figcaption>
+</figure>
+
+<h3 id="sec:posterior-Kn">The posterior in terms of $K_n$</h3>
+
+<details class="callout der" id="der:posterior" data-kind="der"><summary><span class="kind">Derivation</span><span class="ttl">posterior in terms of $K_n$</span><span class="hint">expand</span></summary><div class="body">
+<p>Recall $K_n(w)=\frac1n\sum_i\log\frac{q(x_i)}{p(x_i|w)}$. Then</p>
+<div class="eq nonum">$$e^{nK_n(w)} = e^{\sum_i\log\frac{q(x_i)}{p(x_i|w)}} = \prod_i e^{\log\frac{q(x_i)}{p(x_i|w)}} = \prod_i\frac{q(x_i)}{p(x_i|w)} ,$$</div>
+<p>so</p>
+<div class="eq" id="eq:prod-p-K">$$\prod_i p(x_i|w) = e^{-nK_n(w)}\prod_i q(x_i).$$</div>
+<p>Also recall $\Znz=\int_W e^{-nK_n(w)}\varphi(w)\dd w = \Zn\big/\prod_{i=1}^n q(x_i)$. So</p>
+<div class="eq nonum">$$\int_W\prod_i p(x_i|w')\,\varphi(w')\dd w' = \int_W e^{-nK_n(w')}\prod_i q(x_i)\,\varphi(w')\dd w' = \Znz\cdot\prod_{i=1}^n q(x_i) ,$$</div>
+<p>which gives</p>
+<div class="eq" id="eq:posterior-K">$$\boxed{\;p(w|\Dn)=\frac{e^{-nK_n(w)}\,\cancel{\prod_i q(x_i)}\,\varphi(w)}{\Znz\cdot\cancel{\prod_{i=1}^n q(x_i)}} = \frac{e^{-nK_n(w)}\,\varphi(w)}{\Znz}\;}$$</div>
+</div></details>
+
+<p>A Bayesian learning machine averages over the posterior:</p>
+<div class="eq" id="eq:predictive">$$\boxed{\;p(x|\Dn)=\int_W p(x|w)\,p(w|\Dn)\dd w\;}$$</div>
+
+<!-- ============================================================ -->
+<h2 id="sec:first-geometry">The Log-Likelihood and First Geometry</h2>
+
+<h3 id="sec:score">The score (the $w$-derivative of $\ell$)</h3>
+
+<div class="callout def" id="def:score" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Score</span></div>
+<div class="eq nonum">$$s(x,w)=\gr_w\log p(x|w)\in\R^d .$$</div>
+<p>For a fixed $x\in\X$, $w\mapsto\log p(x|w)$ is a smooth function on $W$ and $s$ is its gradient. $s(x,w)$ varies with the data, so it is a random vector.</p>
+</div>
+
+<p><strong>Mean zero property.</strong> We have</p>
+<div class="eq" id="eq:score-mean-zero">$$\E_{\pw}[s(x,w)]=0 .$$</div>
+
+<details class="callout der" id="der:score-mean-zero" data-kind="der"><summary><span class="kind">Derivation</span><span class="ttl">mean zero property</span><span class="hint">expand</span></summary><div class="body">
+<p>Indeed (the same $w$ is required in both places!)</p>
+<div class="eq nonum">$$\begin{aligned}
+  \E_{\pw}[s(x,w)] &= \int_\X s(x,w)\,p(x|w)\dd x \\
+  &= \int_\X \gr_w\big(\log p(x|w)\big)\,p(x|w)\dd x \\
+  &= \int_\X \frac{\gr_w p(x|w)}{\cancel{p(x|w)}}\,\cancel{p(x|w)}\dd x \\
+  &= \gr_w\int_\X p(x|w)\dd x = \gr_w(1)=0 ,
+\end{aligned}$$</div>
+<p>where the last line is measure theory magic to swap $\int$ and $\gr$.</p>
+</div></details>
+
+<div class="callout int" id="int:score" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">a model cannot learn from its own samples</span></div>
+<p>Sample from $p$ and compute the score of $p$ using those samples. The average of these scores is $0$ (the individual scores are not small, only their mean is). You cannot train a model on its own data: zero gradient.</p>
+</div>
+
+<h3 id="sec:population-loss">Population loss and $K$</h3>
+<p>Recall</p>
+<div class="eq nonum">$$\ell(w)=\E_q[\log p(x|w)]=\int_{x\in\X}\log p(x|w)\,q(x)\dd x ,$$</div>
+<div class="eq nonum">$$\begin{aligned}
+  K(w)=\KL(q\,\|\,\pw) &= \int_\X q(x)\log\frac{q(x)}{p(x|w)}\dd x\\
+  &= \underbrace{\int_\X q(x)\log q(x)\dd x}_{\E_q[\log q(x)]} - \underbrace{\int_\X q(x)\log p(x|w)\dd x}_{\E_q[\log p(x|w)]\,=\,\ell(w)} ,
+\end{aligned}$$</div>
+<p>so</p>
+<div class="eq" id="eq:ell-K">$$\ell(w) = -K(w) + \underbrace{\E_q[\log q(x)]}_{\text{constant in }w,\text{ killed by }\gr_w} = -K(w) - S .$$</div>
+<p>Hence</p>
+<div class="eq" id="eq:grad-ell-K">$$\gr_w\ell(w)=-\gr_w K(w)\qquad\text{and}\qquad \argmin_w K(w)=\argmax_w\ell(w),$$</div>
+<p>and</p>
+<div class="eq" id="eq:grad-ell-score">$$\gr_w\ell(w)=\E_q[s(x,w)],\qquad \gr^2_w\ell(w)=\E_q\big[\gr_w^2\log p(x|w)\big].$$</div>
+
+<div class="callout int" id="int:same-landscape" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">same landscape</span></div>
+<p>It is the same landscape over $w$: the loss landscape $\ell(w)$ is the same as the landscape $K(w)$, except inverted and translated. The curvature of the log-likelihood is minus the curvature of the KL bowl.</p>
+</div>
+
+<h3 id="sec:empirical-population">Relating empirical and population quantities</h3>
+<p>Recall <a class="ref" data-ref="eq:Ln-Kn-Sn"></a>:</p>
+<div class="eq diagram" id="eq:empirical-population">$$\begin{array}{ccccl}
+  -\dfrac1n L_n(w) & = & K_n(w) & +\ S_n & \quad\text{(empirical)}\\[6pt]
+  \Big\downarrow{\scriptstyle n\to\infty} & & \Big\downarrow{\scriptstyle n\to\infty} & \Big\downarrow{\scriptstyle n\to\infty} & \\[6pt]
+  -\ell(w) & = & K(w) & +\ S & \quad\text{(population)}
+\end{array}$$</div>
+
+<div class="callout int" id="int:why-Kn" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">why we study $K_n$ and $L_n$</span></div>
+<p>We want to study $K(w)$ but can't, due to its explicit dependence on $q$. So instead we study $K_n$, which as $n\to\infty$ approaches $K$ in expectation. $K_n(w)$ also has a $q$ dependence, but only implicitly, and it is $L_n(w)$ up to a constant that is independent of $w$ and fully determined by $q$. So studying $L_n(w)$ as $w$ wiggles is equivalent to studying $K_n(w)$ as $w$ wiggles.</p>
+</div>
+
+<h3 id="sec:second-order">$K(w)$ vanishes up to second order</h3>
+<p>Let $W\subset\R^d$ be the parameter space. Consider</p>
+<div class="eq nonum">$$f(\delta)=\KL\big(p(x|w)\,\|\,p(x|w+\delta)\big).$$</div>
+<p>Taylor expand in $\delta$ at $\delta=0$. Denote $p_w=\pw$ and $p_{w+\delta}=p(\,\cdot\,|w+\delta)$:</p>
+<div class="eq" id="eq:taylor">$$f(\delta)\approx \underbrace{f(0)}_{\KL(p_w\|p_w)=0} + \delta^\top\gr_\delta f(\delta)\big|_{\delta=0} + \tfrac12\,\delta^\top\gr^2_\delta f(\delta)\big|_{\delta=0}\,\delta + O(\delta^3).$$</div>
+
+<details class="callout der" id="der:first-order" data-kind="der"><summary><span class="kind">Derivation</span><span class="ttl">the first-order term vanishes</span><span class="hint">expand</span></summary><div class="body">
+<div class="eq nonum">$$\begin{aligned}
+  \gr_\delta f(0) &= \gr_\delta\KL(p_w\,\|\,p_{w+\delta})\big|_{\delta=0} = \gr_\delta\int_\X p(x|w)\log\frac{p(x|w)}{p(x|w+\delta)}\dd x\,\Big|_{\delta=0}\\
+  &= \underbrace{\gr_\delta\E_{p(x|w)}[\log p(x|w)]\big|_{\delta=0}}_{=0\text{ since there is no }\delta\text{ dependence}} - \gr_\delta\E_{p(x|w)}[\log p(x|w+\delta)]\big|_{\delta=0}\\
+  &= -\E_{p(x|w)}\big[\gr_\delta\log p(x|w+\delta)\big|_{\delta=0}\big] \qquad\text{(some measure theory nonsense)}\\
+  &= -\E_{p(x|w)}\big[s(x,w+\delta)\big|_{\delta=0}\big] = -\E_{p(x|w)}[s(x,w)] = 0
+\end{aligned}$$</div>
+<p>by the mean zero property <a class="ref" data-ref="eq:score-mean-zero"></a>, since the $w$'s match.</p>
+</div></details>
+
+<p>Therefore</p>
+<div class="eq" id="eq:taylor-second">$$f(\delta)\approx\tfrac12\,\delta^\top\gr^2_\delta f(\delta)\big|_{\delta=0}\,\delta + O(\delta^3).$$</div>
+<p>We call</p>
+<div class="eq" id="eq:fisher-from-taylor">$$\gr^2_\delta f(\delta)\big|_{\delta=0} = I(w) = -\E_{\pw}\big[\gr^2_w\log p(x|w)\big]$$</div>
+<p>the <strong>Fisher information matrix</strong>. If $p=q$, i.e. $w=\ws$, then $-\E_q[\gr^2_w\log p(x|\ws)]=\gr^2_w K(\ws)$ (see <a class="ref" data-ref="sec:fisher-geometry"></a>).</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:fisher">Fisher Information</h2>
+
+<div class="callout def" id="def:fisher" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Fisher information</span></div>
+<p>Let $w\in W$.</p>
+<div class="eq" id="eq:fisher">$$I(w):=\E_{\pw}\big[s(x,w)\,s(x,w)^\top\big] = -\E_{\pw}\big[\gr^2_w\log p(x|w)\big] .$$</div>
+<p>The first form is the variance of the score $s(x,w)=\gr_w\log p(x|w)$, i.e. the expected variance of the gradients of the log-likelihood. The second form is the expected curvature of the log-likelihood.</p>
+</div>
+
+<div class="callout ex" id="ex:bernoulli" data-kind="ex"><div class="head"><span class="kind">Example</span><span class="ttl">Bernoulli</span></div>
+<p>Consider training data $q(x)\sim\mathrm{Ber}(1/4)$, $W\subset[0,1]$, and suppose $w\in W$. Then</p>
+<div class="eq nonum">$$p(x|w)=w^x(1-w)^{1-x},\quad x\in\{0,1\},\qquad \log p(x|w)=\log w^x+\log(1-w)^{1-x}=x\log w+(1-x)\log(1-w).$$</div>
+<p>Then the gradient with respect to $w$ at the true parameter $w_0=1/4$ is</p>
+<div class="eq nonum">$$\Big[\gr_w\log p(x|w)\Big]_{w=1/4}=\Big[\frac{x}{w}-\frac{1-x}{1-w}\Big]_{w=1/4}
+  =\frac{x}{1/4}-\frac{1-x}{3/4}=4x-\frac{4(1-x)}{3}
+  =\begin{cases}-\frac43 & x=0\\ 4 & x=1\end{cases}$$</div>
+<p>Now</p>
+<div class="eq nonum">$$\begin{aligned}\E\Big[\big[\gr_w\log p(x|w)\big]_{w=1/4}\Big]&=\int_\X\big[\gr_w\log p(x|w)\big]_{w=1/4}\,p(x|w)\dd x\\
+  &=\Big(-\frac43\Big)\Big(\frac34\Big)+(4)\Big(\frac14\Big)=-\frac{12}{12}+\frac44=0\end{aligned}$$</div>
+<p>as expected. But the variance of the score is</p>
+<div class="eq nonum">$$\Big(\frac14\Big)4^2+\frac34\Big(\frac43\Big)^2=\boxed{\frac{16}{3}} .$$</div>
+<p>Alternatively we can consider the curvature of the expected log-likelihood:</p>
+<div class="eq nonum">$$\E[\log p(x|w)]=\int\log p(x|w)\,q(x)\dd x=\log p(0|w)\cdot\frac34+\log p(1|w)\cdot\frac14=\frac34\log(1-w)+\frac14\log w .$$</div>
+<p>Now the curvature of this with respect to $w$, evaluated at $1/4$, is</p>
+<div class="eq nonum">$$\begin{aligned}
+  \Big[\gr^2_w\E[\log p(x|w)]\Big]_{1/4} &= \gr_w\Big[-\frac{3}{4(1-w)}+\frac{1}{4w}\Big]
+  =\Big[-\frac{3}{4(1-w)^2}-\frac{1}{4w^2}\Big]_{w=1/4}\\
+  &= -\frac{3}{4\cdot(3/4)^2}-\frac{1}{4\cdot(1/4)^2}
+  = -\frac{\cancel 3}{\cancel 4}\cdot\frac{\cancel 4\cdot 4}{\cancel 3\cdot 3}-\frac{1}{\cancel 4}\times\cancel 4\times 4\\
+  &= -\frac43-4=\boxed{-\frac{16}{3}} .
+\end{aligned}$$</div>
+</div>
+
+<h3 id="sec:fisher-geometry">Geometry of Fisher</h3>
+<p>Consider the setting $\ws\in\Wz$, so that $p(x|\ws)=q(x)$. Then recall</p>
+<div class="eq" id="eq:fisher-hessian-K">$$I(\ws)=\gr^2_w K(\ws).$$</div>
+
+<details class="callout der" id="der:fisher-hessian" data-kind="der"><summary><span class="kind">Derivation</span><span class="ttl">$I=\gr^2K$ on $\Wz$</span><span class="hint">expand</span></summary><div class="body">
+<div class="eq nonum">$$\begin{aligned}\gr^2_w K(\ws) &= -\gr^2\ell(\ws) = -\gr^2_w\E_q\big[\log p(x|\ws)\big]\\
+  &= -\E_q\big[\gr^2_w\log p(x|\ws)\big] \qquad\text{(dominated convergence, assumed)} .\end{aligned}$$</div>
+<p>But $q(\cdot)=p(\,\cdot\,|\ws)$, so this is</p>
+<div class="eq nonum">$$-\E_{p(\cdot|\ws)}\big[\gr^2_w\log p(x|\ws)\big]\overset{\text{def}}{=} I(\ws).$$</div>
+</div></details>
+
+<p>On $\Wz$, $I(w)$ is the curvature of $K$. Consequently (recall from <a class="ref" data-ref="sec:second-order"></a> that the first two terms vanish)</p>
+<div class="eq" id="eq:quadratic">$$K(\ws+u)=\tfrac12\,u^\top\gr^2_w K(\ws)\,u+O(\|u\|^3)=\tfrac12\,u^\top I(\ws)\,u+O(\|u\|^3).$$</div>
+<p>Geometrically, consider $\{w\in W\mid K(w)&lt;\eps\}$. This is an <strong>ellipsoid</strong></p>
+<div class="eq" id="eq:ellipsoid">$$\{u : u^\top I(w)\,u = 2\eps\}$$</div>
+<p>whose semi-axes have lengths $\sqrt{2\eps/\kappa_j}$, determined by the eigenvalues $\kappa_j$ of $I$. ($I(w)$ is positive semi-definite, so all eigenvalues are $\ge 0$.) See <a class="ref" data-ref="fig:ellipsoid"></a>.</p>
+
+<figure id="fig:ellipsoid" data-kind="fig">
+<div class="figbody">
+  <div class="controls">
+    <label>$\kappa_1$ <input type="range" id="el-k1" min="0.2" max="8" step="0.1" value="4"> <span class="val" id="el-k1-val"></span></label>
+    <label>$\kappa_2$ <input type="range" id="el-k2" min="0" max="8" step="0.1" value="0.5"> <span class="val" id="el-k2-val"></span></label>
+    <label>$\eps$ <input type="range" id="el-eps" min="0.05" max="1" step="0.01" value="0.5"> <span class="val" id="el-eps-val"></span></label>
+  </div>
+  <svg class="plot" id="el-svg" viewBox="0 0 560 320"></svg>
+  <div class="readout" id="el-read"></div>
+</div>
+<figcaption>The contour $K(w)=\eps$ near $\ws$ is an ellipsoid whose semi-axes have lengths $\sqrt{2\eps/\kappa_j}$. The large eigenvalue $\kappa_1$ gives a short axis; the small eigenvalue $\kappa_2$ gives a long, flat direction. Slide $\kappa_2$ to $0$ to see the axis run off.</figcaption>
+</figure>
+
+<ul>
+<li>$\kappa_1$, the largest eigenvalue: travel along the corresponding eigenvector and the loss quickly grows, so the distributions become distinguishable.</li>
+<li>$\kappa_2$, a small eigenvalue: travel along the corresponding eigenvector and you can do so for a long time before the loss exceeds $\eps$.</li>
+</ul>
+
+<div class="callout int" id="int:loss-budget" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">loss budget</span></div>
+<p>Start at $\ws=0$, where $K(\ws)=0$. I give you a loss budget of $\eps$, i.e. I allow $K$ to be up to $\eps>0$. If you perturb $\ws$ in the eigenvector direction corresponding to $\kappa_1$, you will not go far before $K(\ws+u)>\eps$, so the volume of distributions with loss below $\eps$ in that direction is small!</p>
+<p>Perturbing in the $\kappa_2$ direction, you <u>can</u> go far before $K(\ws+u)>\eps$, so there is a big volume of distributions with loss below $\eps$ in that direction.</p>
+<p><strong>A flat direction!</strong></p>
+</div>
+
+<div class="callout ahead" data-kind="ahead"><div class="head"><span class="kind">Looking ahead</span><span class="ttl">repeated from <a class="ref" data-ref="sec:local-rlct"></a></span></div>
+<p>Seeing more data concentrates the posterior mass, but if you have flat directions the mass remains spread out (unlike the regular case, where you kill posterior mass uniformly, like a bowl).</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec:singular-regular">Singular and Regular Models</h2>
+
+<div class="callout def" id="def:regular" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Regular / Singular</span></div>
+<p>A model is <strong>regular</strong> if</p>
+<ol>
+<li>$w\mapsto\pw$ is injective on $W$;</li>
+<li>$I(w)>0$ for all $w\in W$.</li>
+</ol>
+<p>Otherwise the model is <strong>singular</strong>.</p>
+</div>
+
+<p>Note that $I(w)\ge 0$ for all $w$; (2) is a strictness claim. When $I(w)=0$, it indicates flatness in $K$.</p>
+
+<details class="callout der" id="der:flat-direction" data-kind="der"><summary><span class="kind">Derivation</span><span class="ttl">$I(w)=0$ means a flat direction</span><span class="hint">expand</span></summary><div class="body">
+<p>Indeed, let $w\in\Wz$. Then as discussed earlier (<a class="ref" data-ref="eq:quadratic"></a>)</p>
+<div class="eq nonum">$$\begin{aligned}
+  K(w+tv)&\approx\tfrac{t^2}{2}\,v^\top\gr^2_w K(w)\,v
+  \overset{\text{since }w\in\Wz}{=}\tfrac{t^2}{2}\,v^\top I(w)\,v\\
+  &=\tfrac{t^2}{2}\,\E_{\pw}\big[v^\top s(x,w)\,s(x,w)^\top v\big]
+  =\tfrac{t^2}{2}\,\E_{\pw}\big[(v\cdot s(x,w))^2\big].
+\end{aligned}$$</div>
+<p>If $I(w)=0$, then</p>
+<div class="eq nonum">$$v^\top I(w)\,v=\E_{\pw}\big[(v\cdot s(x,w))^2\big]=0\iff v\cdot s(x,w)=0 .$$</div>
+</div></details>
+<p>Moving $w$ in the direction $v$ does not change the log-likelihood, i.e. it is a degenerate direction in the loss landscape.</p>
+
+<div class="callout ahead" data-kind="ahead"><div class="head"><span class="kind">Looking ahead</span><span class="ttl">repeated from <a class="ref" data-ref="sec:phase-transitions"></a></span></div>
+<p>Phase transitions require $\lambda$ to vary. You cannot see them in regular models, where $\lambda=d/2$ is constant.</p>
+</div>
+
+<p><strong>Three simple examples of different kinds of degeneracies</strong> (<a class="ref" data-ref="fig:degeneracies"></a>).</p>
+<ol>
+<li><strong>Redundant parameterization.</strong> Let $W=[-1,1]^2$, $w\mapsto p(\,\cdot\,|a,b)=\N(a+b,1)$, $q=\N(0,1)$. Then the direction $v=\binom{1}{-1}$ has $v\cdot s\equiv 0$. Indeed
+<div class="eq nonum">$$\Wz=\{w\mid K(w)=0\}=\{a+b=0\},$$</div>
+so moving along $\binom{1}{-1}$ has no effect. This degeneracy is fixed by just quotienting out the redundant parameter, though.</li>
+<li><strong>Reparameterization.</strong> Consider $W=[-1,1]$, $p(x|w)=\N(w^3,1)$, $q\sim\N(0,1)$. Again
+<div class="eq nonum">$$\Wz=\{w\in W\mid K(w)=0\}=\{w^3=0\}.$$</div>
+But $\frac{\partial}{\partial w}w^3=3w^2$, which is $0$ at $w=0$, so $I(0)=0$. Simply setting $u=w^3$ removes this degeneracy, though.</li>
+<li><strong>Genuine singularities.</strong> A degenerate fibre structure with no rescue via smooth transformations. This is where we want to focus!</li>
+</ol>
+
+<figure id="fig:degeneracies" data-kind="fig">
+<div class="figbody">
+  <div class="panels three">
+    <div class="panel"><div class="plab">(1) μ = a+b</div><canvas id="dg-1" width="240" height="240"></canvas></div>
+    <div class="panel"><div class="plab">(2) K = ½w⁶ vs ½w²</div><svg class="plot" id="dg-2" viewBox="0 0 240 240"></svg></div>
+    <div class="panel"><div class="plab">(3) μ = ab</div><canvas id="dg-3" width="240" height="240"></canvas></div>
+  </div>
+  <div class="readout" id="dg-read">Hover a contour panel to read off $K(a,b)$.</div>
+</div>
+<figcaption>Three kinds of degeneracy. (1) $\mu=a+b$: $\Wz$ is the line $a+b=0$, and $v=(1,-1)$ is a flat direction. (2) $\mu=w^3$: $K=\tfrac12 w^6$ is flatter than quadratic at $0$, so $I(0)=0$, but $u=w^3$ undoes it. (3) $\mu=ab$: $\Wz$ is the axes cross, a genuine singularity at the origin.</figcaption>
+</figure>
+
+<h3 id="sec:examples">Examples of singularities</h3>
+<p><strong>Setup.</strong> Throughout, $q\sim\N(0,1)$, $W=[-1,1]^2$, $\varphi$ uniform, and</p>
+<div class="eq nonum">$$w\longmapsto p(x|w)=\N(\mu(w),1).$$</div>
+<p>The parameter–function map just takes $w$, computes $\mu(w)$, some function of $w$, and uses it as the mean of $\N(\mu,1)$. Therefore</p>
+<div class="eq" id="eq:K-mu">$$K(w)=\tfrac12\big(\mu(w)\big)^2 .$$</div>
+
+<div class="callout ex" id="ex:regular" data-kind="ex"><div class="head"><span class="kind">Example</span><span class="ttl">1: Regular baseline</span></div>
+<p>Here set $W=[-1,1]$ (not $[-1,1]^2$) and $\mu(w)=w$ (the identity). Then</p>
+<div class="eq nonum">$$K(w)=\tfrac12 w^2,\qquad \Wz=\{w\in W\mid K(w)=0\}=\{0\}.$$</div>
+<p>Now</p>
+<div class="eq nonum">$$\log p(x|w)=\log\frac{1}{\sqrt{2\pi}}\exp\Big(\frac{-(x-w)^2}{2}\Big)=\log\frac{1}{\sqrt{2\pi}}-\frac{(x-w)^2}{2},$$</div>
+<div class="eq nonum">$$\gr_w\log p(x|w)=x-w,\qquad \gr^2_w\log p(x|w)=-1 ,$$</div>
+<p>so</p>
+<div class="eq nonum">$$I(w)=-\E_{\pw}\big[\gr^2_w\log p(x|w)\big]=-\E_{\pw}[-1]=1 .$$</div>
+<p>Since (1) $w\mapsto\N(w,1)$ is injective and (2) $I(w)>0$, the model is regular.</p>
+</div>
+
+<div class="callout ex" id="ex:symmetric" data-kind="ex"><div class="head"><span class="kind">Example</span><span class="ttl">2: Symmetric</span></div>
+<p>Go back to $W=[-1,1]^2$ and set $\mu(a,b)=ab$. Then</p>
+<div class="eq nonum">$$K\big((a,b)\big)=\tfrac12 a^2b^2,\qquad \Wz=\{(a,b):\tfrac12 a^2b^2=0\}=\{ab=0\}=\{a=0\}\cup\{b=0\}$$</div>
+<p>(the axes cross; <a class="ref" data-ref="fig:levelsets"></a>).</p>
+<div class="eq nonum">$$\log p(x|a,b)=\log\frac{1}{\sqrt{2\pi}}\exp\Big(\frac{-(x-ab)^2}{2}\Big)=\log\frac{1}{\sqrt{2\pi}}-\frac{(x-ab)^2}{2},$$</div>
+<div class="eq nonum">$$\gr\log p(x|a,b)=\begin{pmatrix}\gr_a\log p(x|a,b)\\ \gr_b\log p(x|a,b)\end{pmatrix}
+  =\begin{pmatrix}(x-ab)(b)\\ (x-ab)(a)\end{pmatrix}=\begin{pmatrix}xb-ab^2\\ xa-a^2b\end{pmatrix},$$</div>
+<div class="eq nonum">$$\gr^2\log p(x|a,b)=\begin{pmatrix}-b^2 &amp; x-2ab\\ x-2ab &amp; -a^2\end{pmatrix}.$$</div>
+<p>Then $I(a,b)=-\E_{p(x|a,b)}\big[\gr^2\log p(x|a,b)\big]$, and we only need</p>
+<div class="eq nonum">$$\E_{p(x|a,b)}[x-2ab]=\underbrace{\E_{p(x|a,b)}[x]}_{p\sim\N(ab,1)}-\underbrace{\E_{p(x|a,b)}[2ab]}_{\text{constant in }x}=ab-2ab=-ab ,$$</div>
+<p>which gives</p>
+<div class="eq" id="eq:fisher-symmetric">$$I(a,b)=\begin{pmatrix}b^2 &amp; ab\\ ab &amp; a^2\end{pmatrix}.$$</div>
+<p>Now $I(0,0)=0$, so we have a singularity. If we did</p>
+<div class="eq nonum">$$K\big(\tbinom00+v\big)\approx\tfrac12 v^\top I\tbinom00\,v=0,$$</div>
+<p>this would clearly be false, since off the axes $K\big(\tbinom ab\big)\neq 0$. So there must be some direction of change, e.g. $v=\binom11$. This lives in higher order, unseen by $I$!</p>
+<p>Note though that for points on the axes but not at $(0,0)$, $I$ still works. Take e.g. $(a_0,0)$ with $a_0\neq 0$. Then</p>
+<div class="eq nonum">$$I\tbinom{a_0}{0}=\begin{pmatrix}0&amp;0\\0&amp;a_0^2\end{pmatrix}\neq 0,$$</div>
+<p>so</p>
+<div class="eq nonum">$$K\tbinom{a_0+\delta}{b}\approx\tfrac12(\delta,\,b)\begin{pmatrix}0&amp;0\\0&amp;a_0^2\end{pmatrix}\binom{\delta}{b}=\tfrac12(\delta,\,b)\binom{0}{a_0^2 b}=\tfrac12 a_0^2b^2 .$$</div>
+<p>Perturbing $\binom{a_0}{0}$ to $\binom{a_0+\delta}{b}$ causes a loss of $\approx\tfrac12 a_0^2b^2$. $I(w)$ can be used everywhere away from the origin to approximate $K(w+u)$, since it sees everything up to quadratic order and $K$ is not flatter than quadratic away from $(0,0)$!</p>
+</div>
+
+<div class="callout ex" id="ex:asymmetric" data-kind="ex"><div class="head"><span class="kind">Example</span><span class="ttl">3: Asymmetric</span></div>
+<p>Same setup as <a class="ref" data-ref="ex:symmetric"></a>, except $\mu(a,b)=ab^2$, so</p>
+<div class="eq nonum">$$K(a,b)=\tfrac12 a^2b^4 .$$</div>
+<p>$\Wz$ is unchanged and is $\{ab=0\}=\{a=0\}\cup\{b=0\}$. But now</p>
+<div class="eq nonum">$$\log p(x|a,b)=\log\frac{1}{\sqrt{2\pi}}\exp\Big(\frac{-(x-ab^2)^2}{2}\Big)=\log\frac{1}{\sqrt{2\pi}}-\frac{(x-ab^2)^2}{2},$$</div>
+<div class="eq nonum">$$\gr\log p(x|a,b)=\begin{pmatrix}(x-ab^2)(b^2)\\ (x-ab^2)(2ab)\end{pmatrix}=\begin{pmatrix}xb^2-ab^4\\ 2xab-2a^2b^3\end{pmatrix},$$</div>
+<div class="eq nonum">$$\gr^2\log p(x|a,b)=\begin{pmatrix}-b^4 &amp; 2xb-4ab^3\\ 2xb-4ab^3 &amp; 2xa-6a^2b^2\end{pmatrix}.$$</div>
+<p>The entries that depend on $x$ are</p>
+<div class="eq nonum">$$\begin{aligned}
+  \E_{p(x|a,b)}[2xb-4ab^3]&=2b\,\E_{p(x|a,b)}[x]-4ab^3=2b\cdot ab^2-4ab^3=-2ab^3,\\
+  \E_{p(x|a,b)}[2xa-6a^2b^2]&=2a\,\E[x]-6a^2b^2=2a\cdot ab^2-6a^2b^2=-4a^2b^2 ,
+\end{aligned}$$</div>
+<p>so</p>
+<div class="eq" id="eq:fisher-asymmetric">$$I(a,b)=-\E_{p(x|a,b)}\big[\gr^2\log p(x|a,b)\big]=\begin{pmatrix}b^4 &amp; 2ab^3\\ 2ab^3 &amp; 4a^2b^2\end{pmatrix}.$$</div>
+<p>$\Wz$ is still the same axes cross, but the behaviour differs on $a=0$ versus $b=0$. In particular:</p>
+<ol>
+<li>Let $\big\{\tbinom ab\in W\mid a=0,\ b=b_0\neq 0\big\}\subset\Wz$. Then
+<div class="eq nonum">$$I(0,b_0)=\begin{pmatrix}b_0^4&amp;0\\0&amp;0\end{pmatrix}\neq 0\qquad\text{for all }b_0\neq 0 .$$</div>
+So just as in <a class="ref" data-ref="ex:symmetric"></a> on the $a$-axis, we can (for $a$ and $\delta$ small) write
+<div class="eq nonum">$$K\Big(\tbinom{a}{b_0+\delta}\Big)\approx\tfrac12(a,\,\delta)\begin{pmatrix}b_0^4&amp;0\\0&amp;0\end{pmatrix}\binom{a}{\delta}
+    =\tfrac12(a,\,\delta)\binom{ab_0^4}{0}=\tfrac12 a^2b_0^4 .$$</div>
+The eigenvalues are $\kappa_1=b_0^4$ (moving along $a$) and $\kappa_2=0$ (moving along $b$), so $I$ has rank $1$. You can move in the $b$ direction as much as you want, but not in the $a$ direction. An unbounded cylinder! Moving in $a$ is a quadratic volume loss. The only degeneracy is the flat direction in $b$.</li>
+<li>Contrast this with $b=0$. Let $\big\{\tbinom ab\in W\mid a=a_0\neq 0,\ b=0\big\}\subset\Wz$. Then
+<div class="eq nonum">$$I(a_0,0)=\begin{pmatrix}0&amp;0\\0&amp;0\end{pmatrix}=0\qquad\text{for all }a_0 .$$</div>
+Here $I(a_0,0)$ fails to approximate what happens when you move away from $a_0$, since trivially $\tfrac12 v^\top I\tbinom{a_0}{0}v=0$. However, if we actually compute (for $\delta,b$ small)
+<div class="eq nonum">$$K(a_0+\delta,\,b)\approx\tfrac12 a_0^2b^4 ,$$</div>
+so moving off $b=0$, $K$ grows <u>quartically</u>. But $I$ only sees quadratic terms, so it <strong>falsely reports $0$!!</strong> This is why we want $\lambda$, the LLC.</li>
+</ol>
+<p>Note what this means: there is an asymmetry. You can move further from the $b$ axis without growing $K$ much than from the $a$ axis. Growth in $a$ is quadratic, growth in $b$ is quartic. See <a class="ref" data-ref="fig:levelsets"></a> and <a class="ref" data-ref="fig:scaling"></a>.</p>
+</div>
+
+<figure id="fig:levelsets" data-kind="fig">
+<div class="figbody">
+  <div class="controls">
+    <span class="seg" role="group" aria-label="model"><button id="ls-ab" aria-pressed="true">K = ½a²b²</button><button id="ls-ab2" aria-pressed="false">K = ½a²b⁴</button></span>
+    <label>$\eps$ <input type="range" id="ls-eps" min="-5" max="-0.5" step="0.05" value="-1.7"> <span class="val" id="ls-eps-val"></span></label>
+  </div>
+  <div class="panels two">
+    <div class="panel"><div class="plab" id="ls-lab">contours of K; shaded {K &lt; ε}</div><canvas id="ls-canvas" width="360" height="360"></canvas></div>
+    <div class="panel"><div class="plab">Vol(ε) = fraction of W with K &lt; ε  (log–log)</div><svg class="plot" id="ls-svg" viewBox="0 0 360 360"></svg></div>
+  </div>
+  <div class="readout" id="ls-read"></div>
+</div>
+<figcaption>Sublevel sets $\{K&lt;\eps\}$ for <a class="ref" data-ref="ex:symmetric"></a> and <a class="ref" data-ref="ex:asymmetric"></a>. Left: tubes around the axes cross $\Wz$. For $K=\tfrac12 a^2b^4$ the tube around the $b=0$ axis is fat (quartic growth in $b$) and the tube around $a=0$ is thin (quadratic growth in $a$). Right: the volume of $\{K&lt;\eps\}$ under the uniform prior, computed numerically, with reference slopes $\eps^{1/2}$ and $\eps^{1/4}$; compare <a class="ref" data-ref="ex:rlct-symmetric"></a>, and see <a class="ref" data-ref="rem:product-rule"></a> for why the asymmetric case gives $\lambda=\tfrac14$.</figcaption>
+</figure>
+
+<figure id="fig:scaling" data-kind="fig">
+<div class="figbody">
+  <div class="controls">
+    <label>$n$ <input type="range" id="sc-n" min="1" max="6" step="0.02" value="3"> <span class="val" id="sc-n-val"></span></label>
+    <span>(set $\eps = 1/n$)</span>
+  </div>
+  <div class="panels two">
+    <div class="panel"><div class="plab">surviving width vs ε</div><svg class="plot" id="sc-svg1" viewBox="0 0 320 240"></svg></div>
+    <div class="panel"><div class="plab">surviving width at ε = 1/n</div><svg class="plot" id="sc-svg2" viewBox="0 0 320 240"></svg></div>
+  </div>
+  <div class="readout" id="sc-read"></div>
+</div>
+<figcaption>How much more extreme $\eps^{1/4}$ is than $\eps^{1/2}$. Left: surviving width against $\eps$ for a quadratic direction ($\eps^{1/2}$) and a quartic direction ($\eps^{1/4}$). Right: the same with $\eps=1/n$ (cf. <a class="ref" data-ref="tab:contributions"></a>).</figcaption>
+</figure>
+
+<!-- ============================================================ -->
+<h2 id="sec:rlct">RLCT and LLC</h2>
+<p>We saw in <a class="ref" data-ref="sec:singular-regular"></a> that $I(w)$ fails to estimate $K$ near $\ws$ when there are degeneracies (flat directions that grow slower than quadratically). Instead we consider the volume of the sublevel set</p>
+<div class="eq nonum">$$\{w\in W\mid K(w)&lt;\eps\}.$$</div>
+
+<div class="callout ahead" data-kind="ahead"><div class="head"><span class="kind">Looking ahead</span><span class="ttl">repeated from <a class="ref" data-ref="sec:free-energy"></a></span></div>
+<p>$\lambda\log n$ is a penalization for complexity due to parameters. In the regular case this is constant at $\lambda=d/2$. The idea is that low $\lambda$ means more flatness, which means more posterior volume, which means more parameters achieve the optimum loss.</p>
+</div>
+
+<h3 id="sec:rlct-intuition">Some intuition</h3>
+<p>Recall that the posterior mass is (<a class="ref" data-ref="eq:posterior-K"></a>)</p>
+<div class="eq nonum">$$p(w|\Dn)\propto e^{-nK_n(w)}\varphi(w).$$</div>
+<p>In what follows we replace $K_n$ by $K$. In general $n(K_n-K)=O_p(\sqrt n)$, but relative finite variance makes it $O_p(1)$ on the set $\{K\lesssim 1/n\}$, which is the only region that matters below.</p>
+<p>Now observe that if $K(w)>1/n$, then $e^{-nK(w)}&lt;e^{-n\cdot\frac1n}=e^{-1}$. Indeed, as $K(w)$ increases, $e^{-nK(w)}\to 0$. Conversely, as $K(w)\to 0$, $e^{-nK(w)}\to 1$.</p>
+
+<div class="callout int" id="int:mass" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">where the posterior mass lives</span></div>
+<p>Essentially, the mass is nontrivial only when</p>
+<div class="eq" id="eq:mass-threshold">$$K(w)\lesssim\frac1n .$$</div>
+</div>
+
+<p>Now let $\ws\in\Wz$ and consider a unit vector $u\in\R^d$ and $t&lt;\delta$ small. The question we've been asking over and over again is: what does $K(\ws+tu)$ look like? When $I(\ws)$ is non-degenerate we can use it to estimate this up to order 2, but as we saw, this fails if $K$ vanishes up to order 2 <u>but</u> still contains quartic or higher terms. Now from above,</p>
+<div class="eq nonum">$$nK(t)\lesssim 1\iff K(t)\lesssim\frac1n .$$</div>
+<p>Say $K(t)\approx\tfrac12\kappa t^2$. (This is a direction that would work with $I(w)$, since it is quadratic, and $\kappa$ would be the eigenvalue.) Then</p>
+<div class="eq" id="eq:width-quadratic">$$\tfrac12\kappa t^2\le\frac1n\iff \boxed{\|t\|\le\sqrt{\frac{2}{\kappa n}}} .$$</div>
+<p>In <a class="ref" data-ref="ex:asymmetric"></a>, at a point $(a_0,0)$ on the $b=0$ axis, moving off the axis in the $b$ direction,</p>
+<div class="eq" id="eq:width-quartic">$$K(t)\approx\tfrac12\kappa t^4\iff\boxed{\|t\|\le\Big(\frac{2}{\kappa n}\Big)^{1/4}} .$$</div>
+<p>How big can $\|t\|$ be so that $K(t)\le\eps$?</p>
+
+<div class="tblwrap" id="tab:contributions" data-kind="tab"><table>
+<thead><tr><th>$K(t)$ growth</th><th>Surviving width at level $\eps$</th><th>Surviving width at $\eps=1/n$</th><th>Contribution to $\lambda$</th></tr></thead>
+<tbody>
+<tr><td>$t^2$ (quadratic in $t$)</td><td>$\eps^{1/2}$</td><td>$n^{-1/2}$</td><td>$1/2$</td></tr>
+<tr><td>$t^4$ (quartic)</td><td>$\eps^{1/4}$</td><td>$n^{-1/4}$</td><td>$1/4$</td></tr>
+<tr><td>$t^{2k}$</td><td>$\eps^{1/2k}$</td><td>$n^{-1/2k}$</td><td>$1/2k$</td></tr>
+<tr><td>$K\equiv 0$</td><td>$O(1)$</td><td>$O(1)$</td><td>$0$</td></tr>
+</tbody>
+<caption><span class="figno tabno"></span>Contribution of a direction to $\lambda$, by the order at which $K$ grows along it.</caption>
+</table></div>
+
+<p><strong>Some remarks.</strong></p>
+<ol>
+<li>Column 1 measures the following. Consider a unit vector $u$ and $K(\ws+tu)$. Then we're interested in the set $\{t : K(\ws+tu)&lt;\eps\}$. Now say
+<div class="eq" id="eq:width-general">$$K(\ws+tu)\approx\tfrac12\kappa t^{2k}&lt;\eps\iff |t|&lt;\underbrace{\Big(\frac{2\eps}{\kappa}\Big)^{1/2k}}_{\text{width}},$$</div>
+the width of the interval that $t$ can move along before $K(\ws+tu)$ exceeds $\eps$. Now if you multiply the widths across all directions you get the volume $V(\eps)$. At a point where $K$ decouples into a sum over directions, $K\approx\sum_j c_j t_j^{2k_j}$,
+<div class="eq" id="eq:vol-product">$$\mathrm{width}_j\propto\eps^{1/2k_j}\ \Longrightarrow\ \Vol(\eps)\propto\prod_{j=1}^d\eps^{1/2k_j}\propto\eps^{\sum_j 1/2k_j} ,$$</div>
+and $\lambda=\sum_j\frac{1}{2k_j}$ is just this exponent. Note that the unit vectors are the eigenbasis in the regular case.</li>
+<li>Regular means $K(\ws+tu)\approx\tfrac12\kappa t^2$ for all $u$. Note that you might have regular and degenerate directions, e.g. <a class="ref" data-ref="ex:asymmetric"></a> (asymmetry), where at $\ws=(0,b_0)$ the direction $\binom10$ is regular but $\binom01$ is degenerate.</li>
+<li>If a model is regular, then every direction $u$ contributes $\tfrac12$ to $\lambda$. There are $\dim W=d$ directions, so
+<div class="eq nonum">$$\lambda=d\cdot\tfrac12=\frac d2 .$$</div>
+A singular model has at least one direction where the contribution to $\lambda$ is $&lt;\tfrac12$. So for singular models
+<div class="eq" id="eq:lambda-lt-d2">$$\lambda&lt;\frac d2 .$$</div></li>
+</ol>
+
+<div class="callout warn" id="rem:product-rule" data-kind="warn"><div class="head"><span class="kind">Caution</span><span class="ttl">when the product rule applies</span></div>
+<p>Multiplying widths, as in <a class="ref" data-ref="eq:vol-product"></a>, assumes the constraints in the different directions decouple. That holds when $K$ is a sum, $K\approx\sum_j c_j t_j^{2k_j}$: you need every $t_j$ small (an AND). It fails when $K$ is a product, $K\approx c\prod_j t_j^{2k_j}$: you only need the product small (an OR), and then you take a minimum, not a sum:</p>
+<div class="eq nonum">$$K\approx\sum_j c_j t_j^{2k_j}\ \Rightarrow\ \lambda=\sum_j\frac{1}{2k_j},\qquad K\approx c\prod_j t_j^{2k_j}\ \Rightarrow\ \lambda=\min_j\frac{1}{2k_j}.$$</div>
+<p>At the origin of <a class="ref" data-ref="ex:symmetric"></a>, $K=\tfrac12 a^2b^2$, the sum rule would give $0+0=0$, but the direct integration in <a class="ref" data-ref="ex:rlct-symmetric"></a> gives $\lambda=\tfrac12$. At a generic point of a stratum of $\Wz$ the sum rule does work: at $(a_0,0)$ in <a class="ref" data-ref="ex:symmetric"></a> it gives $0+\tfrac12=\tfrac12$. The global $\lambda$ is then the minimum over the strata of $\Wz$. For <a class="ref" data-ref="ex:asymmetric"></a> this gives $\lambda=\min\big(\tfrac14\text{ at }(a_0,0),\ \tfrac12\text{ at }(0,b_0)\big)=\tfrac14$, which is what <a class="ref" data-ref="fig:levelsets"></a> shows numerically.</p>
+</div>
+
+<h3 id="sec:rlct-def">RLCT</h3>
+<div class="callout def" id="def:rlct" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">RLCT</span></div>
+<p>Let $\eps>0$. Define the volume</p>
+<div class="eq" id="eq:vol">$$\Vol(\eps)=\int_{K(w)&lt;\eps}\varphi(w)\dd w\ \propto\ \eps^{\lambda}\Big(\log\frac1\eps\Big)^{m-1} .$$</div>
+<p>$\lambda$ is the real log canonical threshold and $m$ its multiplicity <a class="cite" data-ref="ref-Wat09">[Wat09, Ch. 6]</a>.</p>
+</div>
+
+<div class="callout int" data-kind="int"><div class="head"><span class="kind">Intuition</span></div>
+<p>Intuitively, this is literally what we described above (<a class="ref" data-ref="sec:rlct-intuition"></a>).</p>
+</div>
+
+<div class="callout ex" id="ex:rlct-symmetric" data-kind="ex"><div class="head"><span class="kind">Example</span><span class="ttl">RLCT of the symmetric axes example</span></div>
+<p>Consider the symmetric axes example (<a class="ref" data-ref="ex:symmetric"></a>), where $w=(a,b)\mapsto p(x|a,b)=\N(ab,1)$. Let $\eps>0$. Then</p>
+<div class="eq nonum">$$K(w)&lt;\eps\iff\tfrac12 a^2b^2&lt;\eps\iff |ab|&lt;\underbrace{\sqrt{2\eps}}_{\text{call this }c}.$$</div>
+<p>Note the symmetry in $(a,b)$, i.e. $|ab|=|-ab|=|a\cdot(-b)|=|(-a)(-b)|$, so we need only consider $(a,b)\in[0,1]^2$. Now</p>
+<div class="eq nonum">$$\Vol(\eps)=\int_{\{|ab|&lt;c\}\cap[-1,1]^2}\varphi(w)\dd w=4\int_{\{|ab|&lt;c\}\cap[0,1]^2}\varphi(w)\dd w
+  =4\int_0^1\min\Big(1,\frac ca\Big)\dd a ,$$</div>
+<p>since for fixed $a\in[0,1]$ (with $a,b$ positive) $|ab|&lt;c\iff b&lt;c/a$, so the region is $b\in[0,\min(1,c/a)]$. Evaluating,</p>
+<div class="eq nonum">$$4\int_0^1\min\Big(1,\frac ca\Big)\dd a=4\Big(\int_0^c 1\dd a+\int_c^1\frac ca\dd a\Big)=4c\Big(1+\log\frac1c\Big)
+  \propto\eps^{1/2}\log\frac1\eps\quad\Longrightarrow\quad\lambda=\tfrac12,\ m=2 .$$</div>
+<p>(Here $\varphi$ uniform means $\varphi\equiv\tfrac14$ on $[-1,1]^2$; the constant does not affect the scaling.) Compare the numerical curve in <a class="ref" data-ref="fig:levelsets"></a>.</p>
+</div>
+
+<p><strong>Summary.</strong></p>
+<div class="tblwrap" id="tab:summary" data-kind="tab"><table>
+<thead><tr><th>Object</th><th>What it sees</th><th>What it misses</th></tr></thead>
+<tbody>
+<tr><td>$I(w)$</td><td>the coefficient of the order 2 term at a point</td><td>directions flatter than quadratic</td></tr>
+<tr><td>$\operatorname{rank}I(w)$</td><td>the number of non-degenerate directions, i.e. the number of directions that are not flat up to order 2</td><td>the difference between flat and degenerate, i.e. everything quartic counts as degenerate and would give rank $0$</td></tr>
+<tr><td>$\lambda_U$</td><td>the volume scaling over $U$</td><td></td></tr>
+</tbody>
+<caption><span class="figno tabno"></span>What each object sees.</caption>
+</table></div>
+
+<!-- ============================================================ -->
+<h2 id="sec:free-energy">Free Energy</h2>
+
+<h3 id="sec:free-energy-formula">The free energy formula</h3>
+<p>Recall</p>
+<div class="eq nonum">$$\Zn=\int_W\prod_{i=1}^n p(x_i|w)\,\varphi(w)\dd w=p(\Dn),\qquad \Fn=-\log\Zn .$$</div>
+<p>$\Dn$ is the training data, e.g. pairs $x$ and $y$; $p(\Dn)$ has the $w$-dependence integrated out. $\Fn$ measures how surprised $p$ is by $\Dn$.</p>
+
+<p><strong>Core result.</strong></p>
+<div class="eq boxed" id="eq:free-energy">$$\boxed{\;\Fn=nS_n+\lambda\log n-(m-1)\log\log n+O_p(1)\;}$$</div>
+<p>Here $nS_n$ is model independent, $S_n=-\frac1n\sum_{i=1}^n\log q(x_i)$ being the entropy of the data; $\lambda$ is the RLCT and $m$ its multiplicity. This is Watanabe's Main Theorem 6.2 <a class="cite" data-ref="ref-Wat09">[Wat09, Ch. 6]</a> (in the realizable case). The statement in exactly this form, $F=nL_n(w_0)+\lambda\log n-(m-1)\log\log n+R_n$ with $R_n$ converging in law, is Theorem 2 of <a class="cite" data-ref="ref-Wat13">[Wat13]</a>; there $L_n(w_0)$ is Watanabe's average negative log-likelihood, which equals $S_n$ when the truth is realizable.</p>
+
+<div class="callout int" id="int:free-energy" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">reading the free energy formula</span></div>
+<ul>
+<li>$\Fn$ low is good: the posterior settles on low loss.</li>
+<li>$S_n$ is completely determined by the data: the entropy of $\Dn$.</li>
+<li>$\lambda\log n$ is a penalization for complexity due to parameters. In the regular case this is constant at $\lambda=d/2$. The idea is that low $\lambda$ means more flatness, which means more posterior volume, which means more parameters achieve the optimum loss (note that here we assume the model is realizable, so the optimum is $K(\ws)=0$).</li>
+<li>$(m-1)$: the multiplicity accounts for multiple degeneracies, which means more flatness, which means more posterior mass near the optimum; we subtract it off since it lowers the free energy.</li>
+</ul>
+</div>
+
+<div class="callout rem" id="rem:bic" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">BIC</span></div>
+<div class="eq nonum">$$\Fn=nS_n+\frac d2\log n$$</div>
+<p>is the standard Bayesian Information Criterion, which is what happens in the regular case.</p>
+</div>
+
+<h3 id="sec:local-rlct">Local RLCT</h3>
+<p>In all of the above we worked globally on $W$. Now we go local. Take $U\subset W$.</p>
+
+<div class="callout def" id="def:local" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Local quantities</span></div>
+<div class="eq nonum">$$\hat K_n(U)=\min_{w\in U}K_n(w),\qquad\text{the best empirical loss with parameters in }U;$$</div>
+<div class="eq nonum">$$\lambda_U=\text{the RLCT restricted to }U .$$</div>
+<p>Its volume scaling tells you how much posterior mass lies within $\eps$ of the minimum.</p>
+</div>
+<div class="eq" id="eq:local-free-energy">$$\Fn(U)=n\hat K_n(U)+\lambda_U\log n+O(\log\log n) .$$</div>
+<p>The first term measures how well you fit the data, something like a measure of accuracy on the training data. Low $\lambda_U$ means more posterior volume near the optimum (more degenerate or flat directions). See <a class="cite" data-ref="ref-LLC23">[LLC23]</a> for the local learning coefficient.</p>
+
+<div class="callout int" id="int:imp" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">important: flat directions keep the posterior spread out</span></div>
+<p>Seeing more data concentrates the posterior mass, but if you have flat directions the mass remains spread out (unlike the regular case, where you kill posterior mass uniformly, like a bowl). <a class="ref" data-ref="fig:levelsets"></a> and <a class="ref" data-ref="fig:scaling"></a> show exactly this: shrink $\eps$ (think $\eps=1/n$) and the tube around the flat direction barely narrows.</p>
+</div>
+
+<h3 id="sec:phase-transitions">Phase transitions</h3>
+<p>One of the payoffs of building this machinery is that it may offer an explanation for phenomena we see in deep learning, like phase transitions (which are not explained by regular models).</p>
+
+<div class="callout warn" data-kind="warn"><div class="head"><span class="kind">Caution</span></div>
+<p>This assumes SGD shares characteristics with Bayesian learning. Completely heuristic, as far as I know.</p>
+</div>
+
+<p>Consider $U_1$ and $U_2$, basins of separated local minima, so that each region's minimum is interior and $\lambda_U$ is well-defined (cutting $W$ arbitrarily would put the minimum on a boundary). Then by <a class="ref" data-ref="eq:local-free-energy"></a></p>
+<div class="eq" id="eq:delta-F">$$\Fn(U_1)-\Fn(U_2)\approx n\big(\hat K_n(U_1)-\hat K_n(U_2)\big)+\big(\lambda_{U_1}-\lambda_{U_2}\big)\log n .$$</div>
+<p>A transition requires the two terms to have opposite signs: one region fits worse but is flatter, the other fits better but is stiffer. Then the $\log n$ term dominates at small $n$ and the linear term overtakes it, with the crossover at</p>
+<div class="eq" id="eq:crossover">$$n^*\,\Delta\hat K=|\Delta\lambda|\log n^* .$$</div>
+<p>See <a class="ref" data-ref="fig:crossover"></a>. Note that $\hat K_n$ is random, so $n^*$ is a random variable, not a fixed threshold. Note also that different components of $\Wz$ always have $\Delta\hat K=0$, so they give a drift, not a transition; the two axes in <a class="ref" data-ref="fig:degeneracies"></a> are exactly this case.</p>
+
+<figure id="fig:crossover" data-kind="fig">
+<div class="figbody">
+  <div class="controls">
+    <label>$\Delta\hat K$ <input type="range" id="cr-dk" min="-3" max="-1" step="0.02" value="-2.2"> <span class="val" id="cr-dk-val"></span></label>
+    <label>$|\Delta\lambda|$ <input type="range" id="cr-dl" min="0.1" max="5" step="0.1" value="2"> <span class="val" id="cr-dl-val"></span></label>
+  </div>
+  <svg class="plot" id="cr-svg" viewBox="0 0 560 300"></svg>
+  <div class="readout" id="cr-read"></div>
+</div>
+<figcaption>The linear term $n\Delta\hat K$ against the logarithmic term $|\Delta\lambda|\log n$, and the crossover $n^*$ of <a class="ref" data-ref="eq:crossover"></a>.</figcaption>
+</figure>
+
+<div class="callout rem" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">Note</span></div>
+<p>Phase transitions require $\lambda$ to vary. You cannot see them in regular models, where $\lambda=d/2$ is constant.</p>
+</div>
+
+<p class="next"><strong>Next time:</strong> Estimating $\lambda_U$, the local learning coefficients. Developmental interpretability: using $\hat\lambda_U$ as observables.</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:references">References</h2>
+<ol class="refs">
+<li id="ref-Wat09" class="ref-target"><span class="key">[Wat09]</span><span>S. Watanabe. <em>Algebraic Geometry and Statistical Learning Theory</em>. Cambridge Monographs on Applied and Computational Mathematics 25, Cambridge University Press, 2009. <span class="note">RLCT and multiplicity via the zeta function, Chapter 6; the free energy asymptotics, Main Theorem 6.2.</span></span></li>
+<li id="ref-Wat13" class="ref-target"><span class="key">[Wat13]</span><span>S. Watanabe. A widely applicable Bayesian information criterion. <em>Journal of Machine Learning Research</em> 14 (2013), 867–897. <a href="https://www.jmlr.org/papers/volume14/watanabe13a/watanabe13a.pdf">jmlr.org</a> <span class="note">Theorem 2: $F=nL_n(w_0)+\lambda\log n-(m-1)\log\log n+R_n$.</span></span></li>
+<li id="ref-LLC23" class="ref-target"><span class="key">[LLC23]</span><span>E. Lau, Z. Furman, G. Wang, D. Murfet, S. Wei. The Local Learning Coefficient: A Singularity-Aware Complexity Measure. <a href="https://arxiv.org/abs/2308.12108">arXiv:2308.12108</a>, 2023. <span class="note">Local RLCT $\lambda(\ws)$ as a volume-scaling exponent; the local free energy $F_n(B)=nL_n(\ws)+\lambda(\ws)\log n+o_p(\log\log n)$.</span></span></li>
+<li id="ref-Car23" class="ref-target"><span class="key">[Car23]</span><span>L. Carroll. Distilling Singular Learning Theory (DSLT), sequence of posts, LessWrong / AI Alignment Forum, 2023. <a href="https://www.lesswrong.com/s/czrXjvCLsqGepybHC">lesswrong.com</a></span></li>
+<li id="ref-Fur24" class="ref-target"><span class="key">[Fur24]</span><span>Z. Furman. Singular learning theory: exercises. Timaeus blog / LessWrong, 30 August 2024. <a href="https://timaeus.co/blog/slt/2024-08-30-exercises">timaeus.co</a></span></li>
+</ol>
+</main>
+</div>
+<button id="backbtn" type="button">↩ back to where you were</button>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------------- numbering & cross references ---------------- */
+function number(){
+  // sections
+  let h2=0,h3=0; const toc=$('#toclist');
+  $$('main h2, main h3').forEach(h=>{
+    if(h.tagName==='H2'){h2++;h3=0;h.dataset.label=String(h2);}else{h3++;h.dataset.label=h2+'.'+h3;}
+    h.dataset.kind='sec';
+    const title=h.textContent.trim();
+    if(!h.querySelector('.num')){const s=document.createElement('span');s.className='num';s.textContent=h.dataset.label;h.prepend(s);}
+    if(!h.id){h.id='sec-'+h.dataset.label.replace('.','-');}
+    const li=document.createElement('li');li.className=h.tagName==='H2'?'l2':'l3';
+    const a=document.createElement('a');a.href='#'+h.id;a.textContent=title;a.dataset.target=h.id;li.appendChild(a);toc.appendChild(li);
+  });
+  // equations (numbered unless .nonum)
+  let n=0;
+  $$('main .eq').forEach(e=>{
+    if(e.classList.contains('nonum')||e.closest('.popover'))return;
+    n++;e.dataset.label='('+n+')';e.dataset.kind='eq';
+    if(!e.id)e.id='eq-'+n;
+    const a=document.createElement('a');a.className='eqno';a.href='#'+e.id;a.textContent='('+n+')';a.title='Link to this equation';e.appendChild(a);
+  });
+  // figures, tables, examples, definitions
+  const counters={};
+  const prefix={fig:'Figure',tab:'Table',ex:'Example',def:'Definition',rem:'Remark',der:'Derivation',int:'Intuition',ahead:'Looking ahead',warn:'Caution'};
+  $$('main [data-kind]').forEach(el=>{
+    const k=el.dataset.kind; if(k==='sec'||k==='eq')return;
+    counters[k]=(counters[k]||0)+1; el.dataset.label=prefix[k]+' '+counters[k];
+    if(k==='fig'){const c=el.querySelector('figcaption');if(c){const s=document.createElement('span');s.className='figno';s.textContent='Figure '+counters[k];c.prepend(s);}}
+    if(k==='tab'){const s=el.querySelector('.tabno');if(s)s.textContent='Table '+counters[k]+' · ';}
+    if(k==='ex'){const t=el.querySelector('.kind');if(t)t.textContent='Example '+counters[k];}
+    if(k==='def'){const t=el.querySelector('.kind');if(t)t.textContent='Definition '+counters[k];}
+  });
+  // fill refs
+  $$('a.ref, a.cite').forEach(a=>{
+    const id=a.dataset.ref; const t=document.getElementById(id); if(!t){a.textContent=a.textContent||'??';return;}
+    a.href='#'+id;
+    if(!a.textContent.trim()){
+      const k=t.dataset.kind, lab=t.dataset.label||'';
+      a.textContent=k==='eq'?lab:k==='sec'?'Section '+lab:lab;
+    }
+  });
+}
+
+/* ---------------- hover previews ---------------- */
+let pop=null, popTimer=null;
+function showPop(a){
+  const t=document.getElementById(a.dataset.ref); if(!t)return;
+  hidePop();
+  pop=document.createElement('div');pop.className='popover';
+  const lab=document.createElement('div');lab.className='pop-label';
+  const k=t.dataset.kind;
+  lab.textContent=k==='eq'?'Equation '+t.dataset.label:k==='sec'?'Section '+t.dataset.label:(t.dataset.label||'Reference');
+  pop.appendChild(lab);
+  let clone;
+  if(k==='sec'){
+    // section: heading + first paragraph
+    clone=document.createElement('div');const h=t.cloneNode(true);h.querySelectorAll('.num').forEach(x=>x.remove());h.style.margin='0';h.style.border='0';h.style.padding='0';h.style.fontSize='1.1rem';clone.appendChild(h);
+    let nx=t.nextElementSibling; while(nx&&!(nx.tagName==='P'||nx.classList.contains('callout')||nx.classList.contains('eq')))nx=nx.nextElementSibling;
+    if(nx){const c=nx.cloneNode(true);c.style.maxHeight='140px';c.style.overflow='hidden';clone.appendChild(c);}
+  }else if(k==='fig'){
+    clone=t.cloneNode(true);
+  }else{
+    clone=t.cloneNode(true);
+  }
+  clone.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+  clone.querySelectorAll('.eqno').forEach(x=>x.remove());
+  pop.appendChild(clone);
+  document.body.appendChild(pop);
+  const r=a.getBoundingClientRect(), pw=pop.offsetWidth, ph=pop.offsetHeight;
+  let left=window.scrollX+r.left, top=window.scrollY+r.bottom+8;
+  if(left+pw>window.scrollX+window.innerWidth-12)left=window.scrollX+window.innerWidth-12-pw;
+  if(r.bottom+8+ph>window.innerHeight&&r.top-ph-8>0)top=window.scrollY+r.top-ph-8;
+  pop.style.left=left+'px';pop.style.top=top+'px';
+}
+function hidePop(){if(pop){pop.remove();pop=null;}}
+function wireRefs(){
+  $$('a.ref, a.cite').forEach(a=>{
+    a.addEventListener('mouseenter',()=>{clearTimeout(popTimer);popTimer=setTimeout(()=>showPop(a),120);});
+    a.addEventListener('mouseleave',()=>{clearTimeout(popTimer);hidePop();});
+    a.addEventListener('focus',()=>showPop(a)); a.addEventListener('blur',hidePop);
+    a.addEventListener('click',()=>{hidePop();rememberPos();});
+  });
+  window.addEventListener('scroll',()=>{if(pop)hidePop();},{passive:true});
+}
+/* flash the target on hash navigation, open details if needed */
+function flashTarget(){
+  const id=decodeURIComponent(location.hash.slice(1)); if(!id)return;
+  const t=document.getElementById(id); if(!t)return;
+  const d=t.closest('details'); if(d&&!d.open){d.open=true;}
+  t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash');
+}
+window.addEventListener('hashchange',flashTarget);
+/* back button */
+let savedY=null; const backbtn=$('#backbtn');
+function rememberPos(){savedY=window.scrollY;backbtn.classList.add('show');}
+backbtn.addEventListener('click',()=>{if(savedY!=null){window.scrollTo({top:savedY,behavior:'smooth'});}backbtn.classList.remove('show');savedY=null;history.replaceState(null,'',location.pathname+location.search);});
+
+/* ---------------- toc highlighting ---------------- */
+function wireToc(){
+  const links=$$('#toclist a'); if(!links.length||!('IntersectionObserver' in window))return;
+  const map=new Map(links.map(a=>[a.dataset.target,a]));
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(en=>{if(en.isIntersecting){links.forEach(l=>l.classList.remove('active'));const a=map.get(en.target.id);if(a)a.classList.add('active');}});
+  },{rootMargin:'-10% 0px -80% 0px'});
+  $$('main h2, main h3').forEach(h=>obs.observe(h));
+}
+/* ---------------- derivation toggle ---------------- */
+function wireDer(){
+  const ds=$$('details.callout'); let open=false;
+  const upd=()=>{['#toggle-der','#toggle-der-2'].forEach(s=>{const b=$(s);if(b)b.textContent=open?'Collapse derivations':'Expand derivations';});};
+  ['#toggle-der','#toggle-der-2'].forEach(s=>{const b=$(s);if(b)b.addEventListener('click',()=>{open=!open;ds.forEach(d=>d.open=open);upd();});});
+}
+
+/* ---------------- figure helpers ---------------- */
+const colors=()=>({red:css('--red'),blue:css('--blue'),green:css('--green'),purple:css('--purple'),ink:css('--ink'),ink2:css('--ink-2'),ink3:css('--ink-3'),rule:css('--rule'),paper:css('--paper'),paper2:css('--paper-2')});
+function hexToRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return [(n>>16)&255,(n>>8)&255,n&255];}
+const models={
+  ab:{K:(a,b)=>0.5*a*a*b*b,label:'K = ½a²b²',W0:'cross'},
+  ab2:{K:(a,b)=>0.5*a*a*b*b*b*b,label:'K = ½a²b⁴',W0:'cross'},
+  apb:{K:(a,b)=>0.5*(a+b)*(a+b),label:'K = ½(a+b)²',W0:'anti'},
+  bowl:{K:(a,b)=>0.5*(a*a+b*b),label:'K = ½(a²+b²)',W0:'point'}
+};
+// draw contour heatmap + sublevel shading + W0 on a square canvas over [-1,1]^2
+function drawField(canvas,Kf,eps,W0,opts={}){
+  const ctx=canvas.getContext('2d'), N=canvas.width, c=colors();
+  const img=ctx.createImageData(N,N), d=img.data;
+  const base=hexToRgb(c.paper2), blue=hexToRgb(c.blue), red=hexToRgb(c.red);
+  const dark=document.documentElement.dataset.theme==='dark'||(matchMedia('(prefers-color-scheme:dark)').matches&&document.documentElement.dataset.theme!=='light');
+  const levels=[1e-4,1e-3,1e-2,3e-2,1e-1,0.3];
+  const grid=new Float32Array(N*N);
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const a=-1+2*(i+0.5)/N,b=1-2*(j+0.5)/N;grid[j*N+i]=Kf(a,b);}
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+    const K=grid[j*N+i]; const l=Math.max(0,Math.min(1,(Math.log10(K+1e-9)+5)/5.5));
+    let r=base[0]+(blue[0]-base[0])*l*0.55, g=base[1]+(blue[1]-base[1])*l*0.55, bl=base[2]+(blue[2]-base[2])*l*0.55;
+    if(K<eps){r=r*0.45+red[0]*0.55;g=g*0.45+red[1]*0.55;bl=bl*0.45+red[2]*0.55;}
+    const o=4*(j*N+i);d[o]=r;d[o+1]=g;d[o+2]=bl;d[o+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+  // contour lines (marching squares, cheap)
+  ctx.lineWidth=1;ctx.strokeStyle=dark?'rgba(255,255,255,.35)':'rgba(0,0,0,.35)';
+  const step=2;
+  for(const lv of levels){
+    ctx.beginPath();
+    for(let j=0;j<N-step;j+=step)for(let i=0;i<N-step;i+=step){
+      const v=[grid[j*N+i],grid[j*N+i+step],grid[(j+step)*N+i+step],grid[(j+step)*N+i]];
+      const idx=(v[0]>lv?8:0)|(v[1]>lv?4:0)|(v[2]>lv?2:0)|(v[3]>lv?1:0);
+      if(idx===0||idx===15)continue;
+      const pts=[];
+      const lerp=(pa,pb,va,vb)=>{const t=(lv-va)/(vb-va||1e-12);return [pa[0]+(pb[0]-pa[0])*t,pa[1]+(pb[1]-pa[1])*t];};
+      const P=[[i,j],[i+step,j],[i+step,j+step],[i,j+step]];
+      const edges=[[0,1],[1,2],[2,3],[3,0]];
+      edges.forEach(([m,n])=>{if((v[m]>lv)!==(v[n]>lv))pts.push(lerp(P[m],P[n],v[m],v[n]));});
+      if(pts.length>=2){ctx.moveTo(pts[0][0]+0.5,pts[0][1]+0.5);ctx.lineTo(pts[1][0]+0.5,pts[1][1]+0.5);if(pts.length===4){ctx.moveTo(pts[2][0]+0.5,pts[2][1]+0.5);ctx.lineTo(pts[3][0]+0.5,pts[3][1]+0.5);}}
+    }
+    ctx.stroke();
+  }
+  // W0
+  ctx.strokeStyle=c.red;ctx.lineWidth=2;ctx.beginPath();
+  if(W0==='cross'){ctx.moveTo(0,N/2);ctx.lineTo(N,N/2);ctx.moveTo(N/2,0);ctx.lineTo(N/2,N);}
+  else if(W0==='anti'){ctx.moveTo(0,0);ctx.lineTo(N,N);}
+  ctx.stroke();
+  if(W0==='point'){ctx.fillStyle=c.red;ctx.beginPath();ctx.arc(N/2,N/2,4,0,2*Math.PI);ctx.fill();}
+  // frame + axis labels
+  ctx.strokeStyle=c.ink3;ctx.lineWidth=1;ctx.strokeRect(0.5,0.5,N-1,N-1);
+  ctx.fillStyle=c.ink2;ctx.font='11px IBM Plex Mono, monospace';ctx.fillText('a',N-12,N/2-6);ctx.fillText('b',N/2+6,12);
+  return grid;
+}
+function volFraction(Kf,eps,N=400){let cnt=0;for(let j=0;j<N;j++)for(let i=0;i<N;i++){const a=-1+2*(i+0.5)/N,b=-1+2*(j+0.5)/N;if(Kf(a,b)<eps)cnt++;}return cnt/(N*N);}
+function svgEl(tag,attrs,parent){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+function fmt(x,d=3){return Number(x).toPrecision(d);}
+
+/* ---------------- Fig: pullback ---------------- */
+function figPullback(){
+  const sel=$('#pb-model'),rng=$('#pb-eps'),val=$('#pb-eps-val'),cv=$('#pb-left'),svg=$('#pb-right'),read=$('#pb-read');
+  if(!sel)return;
+  function draw(){
+    const m=models[sel.value], eps=Math.pow(10,parseFloat(rng.value)); val.textContent=fmt(eps,2);
+    drawField(cv,m.K,eps,m.W0);
+    const c=colors(); clear(svg);
+    const cx=180,cy=180;
+    // level sets: radius ∝ sqrt(KL) so eps maps to r; show a few dotted circles and the current eps in red
+    const rOf=e=>Math.min(170,240*Math.sqrt(e));
+    [1e-3,1e-2,5e-2,0.15,0.4].forEach(e=>{svgEl('circle',{cx,cy,r:rOf(e),fill:'none',stroke:c.green,'stroke-dasharray':'3 3','stroke-width':1},svg);});
+    svgEl('circle',{cx,cy,r:rOf(eps),fill:c.red,'fill-opacity':.18,stroke:c.red,'stroke-width':1.5},svg);
+    svgEl('circle',{cx,cy,r:3.5,fill:c.purple},svg);
+    const t=svgEl('text',{x:cx+8,y:cy-6},svg);t.textContent='q  (KL = 0)';
+    const t2=svgEl('text',{x:cx+rOf(eps)*0.72+4,y:cy+rOf(eps)*0.72+12,fill:c.red},svg);t2.textContent='KL(q‖·) = ε';t2.setAttribute('style','fill:'+c.red);
+    const t3=svgEl('text',{x:12,y:16},svg);t3.textContent='Ψ maps the red set on the left onto this disc';
+    const t4=svgEl('text',{x:12,y:350},svg);t4.textContent='(radius drawn ∝ √ε, schematic)';
+    read.innerHTML='model '+m.label+' · ε = <b>'+fmt(eps,2)+'</b> · fraction of W with K &lt; ε: <b>'+fmt(volFraction(m.K,eps,300),3)+'</b>';
+  }
+  sel.addEventListener('change',draw);rng.addEventListener('input',draw);draw();
+  return draw;
+}
+
+/* ---------------- Fig: ellipsoid ---------------- */
+function figEllipsoid(){
+  const k1=$('#el-k1'),k2=$('#el-k2'),ep=$('#el-eps'),svg=$('#el-svg'),read=$('#el-read'); if(!svg)return;
+  function draw(){
+    const K1=parseFloat(k1.value),K2=parseFloat(k2.value),E=parseFloat(ep.value);
+    $('#el-k1-val').textContent=K1.toFixed(1);$('#el-k2-val').textContent=K2.toFixed(1);$('#el-eps-val').textContent=E.toFixed(2);
+    const c=colors();clear(svg);
+    const cx=280,cy=160,S=60,th=-25*Math.PI/180;
+    const r1=Math.sqrt(2*E/K1)*S, r2=K2>0?Math.sqrt(2*E/K2)*S:Infinity;
+    const R2=Math.min(r2,900);
+    const g=svgEl('g',{transform:`translate(${cx},${cy}) rotate(${th*180/Math.PI})`},svg);
+    svgEl('ellipse',{cx:0,cy:0,rx:r1,ry:R2,fill:c.red,'fill-opacity':.14,stroke:c.red,'stroke-width':2},g);
+    svgEl('line',{x1:0,y1:0,x2:r1,y2:0,stroke:c.blue,'stroke-width':2},g);
+    svgEl('line',{x1:0,y1:0,x2:0,y2:-Math.min(R2,140),stroke:c.green,'stroke-width':2,'stroke-dasharray':r2===Infinity?'4 4':'none'},g);
+    svgEl('circle',{cx:0,cy:0,r:3.5,fill:c.ink},g);
+    const t0=svgEl('text',{x:16,y:cy+120},svg);t0.textContent='contour K(w) = ε';t0.setAttribute('style','fill:'+c.red);
+    const t1=svgEl('text',{x:16,y:36},svg);t1.textContent='κ₁ direction: semi-axis √(2ε/κ₁) = '+fmt(Math.sqrt(2*E/K1),3);t1.setAttribute('style','fill:'+c.blue);
+    const t2=svgEl('text',{x:16,y:54},svg);t2.textContent='κ₂ direction: semi-axis √(2ε/κ₂) = '+(K2>0?fmt(Math.sqrt(2*E/K2),3):'∞  (flat direction)');t2.setAttribute('style','fill:'+c.green);
+    const t3=svgEl('text',{x:cx+6,y:cy+16},svg);t3.textContent='w*, K(w*) = 0';
+    read.innerHTML='eigenvalues κ₁ = <b>'+K1.toFixed(1)+'</b>, κ₂ = <b>'+K2.toFixed(1)+'</b> · loss budget ε = <b>'+E.toFixed(2)+'</b>'+(K2===0?' · <b>κ₂ = 0: you can go as far as you like along it</b>':'');
+  }
+  [k1,k2,ep].forEach(r=>r.addEventListener('input',draw));draw();return draw;
+}
+
+/* ---------------- Fig: degeneracies ---------------- */
+function figDegeneracies(){
+  const c1=$('#dg-1'),c3=$('#dg-3'),s2=$('#dg-2'),read=$('#dg-read'); if(!c1)return;
+  function draw(){
+    const g1=drawField(c1,models.apb.K,1e-3,'anti'), g3=drawField(c3,models.ab.K,1e-3,'cross');
+    const c=colors();clear(s2);
+    const W=240,H=240,pad=26; const xs=w=>pad+(w+1.2)/2.4*(W-2*pad), ys=k=>H-pad-k/0.8*(H-2*pad);
+    svgEl('line',{x1:pad,y1:H-pad,x2:W-pad,y2:H-pad,class:'axis'},s2);svgEl('line',{x1:pad,y1:pad,x2:pad,y2:H-pad,class:'axis'},s2);
+    let d1='',d2='';for(let i=0;i<=200;i++){const w=-1.2+2.4*i/200;const y6=Math.min(0.8,0.5*Math.pow(w,6)),y2=Math.min(0.8,0.5*w*w);d1+=(i?'L':'M')+xs(w)+','+ys(y6)+' ';d2+=(i?'L':'M')+xs(w)+','+ys(y2)+' ';}
+    svgEl('path',{d:d2,fill:'none',stroke:c.ink3,'stroke-width':1.5,'stroke-dasharray':'4 3'},s2);
+    svgEl('path',{d:d1,fill:'none',stroke:c.red,'stroke-width':2},s2);
+    const t=svgEl('text',{x:pad+6,y:pad+12},s2);t.textContent='½w⁶ (red) vs ½w² (dashed)';
+    const tx=svgEl('text',{x:W-pad-4,y:H-pad+14},s2);tx.textContent='w';const ty=svgEl('text',{x:pad-18,y:pad+4},s2);ty.textContent='K';
+    [[c1,g1,'μ=a+b'],[c3,g3,'μ=ab']].forEach(([cv,g,lab])=>{cv.onmousemove=e=>{const r=cv.getBoundingClientRect();const i=Math.floor((e.clientX-r.left)/r.width*cv.width),j=Math.floor((e.clientY-r.top)/r.height*cv.height);if(i<0||j<0||i>=cv.width||j>=cv.height)return;const a=-1+2*(i+0.5)/cv.width,b=1-2*(j+0.5)/cv.height;read.innerHTML=lab+' · a = <b>'+a.toFixed(2)+'</b>, b = <b>'+b.toFixed(2)+'</b> · K(a,b) = <b>'+fmt(g[j*cv.width+i],3)+'</b>';};});
+  }
+  draw();return draw;
+}
+
+/* ---------------- Fig: level sets + volume ---------------- */
+function figLevelsets(){
+  const bA=$('#ls-ab'),bB=$('#ls-ab2'),rng=$('#ls-eps'),val=$('#ls-eps-val'),cv=$('#ls-canvas'),svg=$('#ls-svg'),read=$('#ls-read'),lab=$('#ls-lab'); if(!cv)return;
+  let which='ab'; const epss=[];for(let e=-5;e<=-0.3;e+=0.25)epss.push(Math.pow(10,e));
+  const cache={};
+  function curve(k){if(cache[k])return cache[k];cache[k]=epss.map(e=>volFraction(models[k].K,e,260));return cache[k];}
+  function draw(){
+    const eps=Math.pow(10,parseFloat(rng.value)); val.textContent=fmt(eps,2);
+    const m=models[which]; lab.textContent=m.label+' ; shaded {K < ε}';
+    drawField(cv,m.K,eps,'cross');
+    const c=colors();clear(svg);
+    const W=360,H=360,pad=40; const xs=e=>pad+(Math.log10(e)+5)/4.7*(W-2*pad), ys=v=>H-pad-(Math.log10(v)+3)/3*(H-2*pad);
+    // axes & grid
+    for(let e=-5;e<=0;e++){svgEl('line',{x1:xs(Math.pow(10,e)),y1:pad,x2:xs(Math.pow(10,e)),y2:H-pad,class:'grid'},svg);const t=svgEl('text',{x:xs(Math.pow(10,e))-8,y:H-pad+14},svg);t.textContent='1e'+e;}
+    for(let v=-3;v<=0;v++){svgEl('line',{x1:pad,y1:ys(Math.pow(10,v)),x2:W-pad,y2:ys(Math.pow(10,v)),class:'grid'},svg);const t=svgEl('text',{x:4,y:ys(Math.pow(10,v))+3},svg);t.textContent='1e'+v;}
+    const tx=svgEl('text',{x:W/2-4,y:H-8},svg);tx.textContent='ε';
+    // reference slopes
+    const ref=(p,col,label,y0)=>{let d='';epss.forEach((e,i)=>{const v=y0*Math.pow(e,p);if(v>1e-3&&v<1)d+=(d?'L':'M')+xs(e)+','+ys(v)+' ';});svgEl('path',{d,fill:'none',stroke:col,'stroke-width':1,'stroke-dasharray':'3 3'},svg);const t=svgEl('text',{x:xs(0.2)-30,y:ys(y0*Math.pow(0.2,p))-4},svg);t.textContent=label;t.setAttribute('style','fill:'+col);};
+    ref(0.5,c.ink3,'∝ ε^½',0.6);ref(0.25,c.ink3,'∝ ε^¼',0.6);
+    // curves
+    [['ab',c.blue,'½a²b²'],['ab2',c.green,'½a²b⁴']].forEach(([k,col,label])=>{
+      const vs=curve(k);let d='';vs.forEach((v,i)=>{if(v>0)d+=(d?'L':'M')+xs(epss[i])+','+ys(Math.max(v,1e-3))+' ';});
+      svgEl('path',{d,fill:'none',stroke:col,'stroke-width':k===which?2.5:1.2,opacity:k===which?1:.6},svg);
+      const t=svgEl('text',{x:xs(epss[2])+4,y:ys(Math.max(vs[2],1e-3))-6},svg);t.textContent=label;t.setAttribute('style','fill:'+col);
+    });
+    const v=volFraction(m.K,eps,260);
+    svgEl('circle',{cx:xs(eps),cy:ys(Math.max(v,1e-3)),r:4.5,fill:c.red},svg);
+    read.innerHTML=m.label+' · ε = <b>'+fmt(eps,2)+'</b> · Vol(ε) (fraction of W, uniform prior) = <b>'+fmt(v,3)+'</b>'+(which==='ab'?' · analytic: 4c(1+log 1/c)/4 with c=√(2ε) → <b>'+fmt(Math.sqrt(2*eps)*(1+Math.log(1/Math.sqrt(2*eps))),3)+'</b>':' · scales like ε^¼ (λ = ¼)');
+  }
+  bA.addEventListener('click',()=>{which='ab';bA.setAttribute('aria-pressed','true');bB.setAttribute('aria-pressed','false');draw();});
+  bB.addEventListener('click',()=>{which='ab2';bB.setAttribute('aria-pressed','true');bA.setAttribute('aria-pressed','false');draw();});
+  rng.addEventListener('input',draw);draw();return draw;
+}
+
+/* ---------------- Fig: scaling ---------------- */
+function figScaling(){
+  const rng=$('#sc-n'),val=$('#sc-n-val'),s1=$('#sc-svg1'),s2=$('#sc-svg2'),read=$('#sc-read'); if(!s1)return;
+  function draw(){
+    const n=Math.pow(10,parseFloat(rng.value)); val.textContent=fmt(n,3); const eps=1/n; const c=colors();
+    clear(s1);clear(s2);
+    const W=320,H=240,pad=34;
+    // left: widths vs eps in [0,0.1]
+    const xs=e=>pad+e/0.1*(W-2*pad), ys=y=>H-pad-y/0.6*(H-2*pad);
+    svgEl('line',{x1:pad,y1:H-pad,x2:W-pad,y2:H-pad,class:'axis'},s1);svgEl('line',{x1:pad,y1:pad,x2:pad,y2:H-pad,class:'axis'},s1);
+    [[0.5,c.blue,'ε^½'],[0.25,c.red,'ε^¼']].forEach(([p,col,lab])=>{let d='';for(let i=0;i<=200;i++){const e=0.1*i/200;d+=(i?'L':'M')+xs(e)+','+ys(Math.pow(e,p))+' ';}svgEl('path',{d,fill:'none',stroke:col,'stroke-width':2},s1);const t=svgEl('text',{x:W-pad-30,y:ys(Math.pow(0.1,p))-6},s1);t.textContent=lab;t.setAttribute('style','fill:'+col);});
+    if(eps<=0.1){svgEl('line',{x1:xs(eps),y1:pad,x2:xs(eps),y2:H-pad,stroke:c.ink3,'stroke-dasharray':'3 3'},s1);svgEl('circle',{cx:xs(eps),cy:ys(Math.sqrt(eps)),r:4,fill:c.blue},s1);svgEl('circle',{cx:xs(eps),cy:ys(Math.pow(eps,0.25)),r:4,fill:c.red},s1);}
+    const tx=svgEl('text',{x:W-pad-4,y:H-pad+14},s1);tx.textContent='ε';const ty=svgEl('text',{x:pad-26,y:pad+2},s1);ty.textContent='width';
+    // right: log-log vs n
+    const xn=v=>pad+(Math.log10(v)-1)/5*(W-2*pad), yn=w=>H-pad-(Math.log10(w)+3)/3*(H-2*pad);
+    for(let e=1;e<=6;e++){svgEl('line',{x1:xn(Math.pow(10,e)),y1:pad,x2:xn(Math.pow(10,e)),y2:H-pad,class:'grid'},s2);const t=svgEl('text',{x:xn(Math.pow(10,e))-8,y:H-pad+14},s2);t.textContent='1e'+e;}
+    for(let v=-3;v<=0;v++){svgEl('line',{x1:pad,y1:yn(Math.pow(10,v)),x2:W-pad,y2:yn(Math.pow(10,v)),class:'grid'},s2);const t=svgEl('text',{x:2,y:yn(Math.pow(10,v))+3},s2);t.textContent='1e'+v;}
+    [[0.5,c.blue,'n^-½'],[0.25,c.red,'n^-¼']].forEach(([p,col,lab])=>{svgEl('line',{x1:xn(10),y1:yn(Math.pow(10,-p)),x2:xn(1e6),y2:yn(Math.pow(1e6,-p)),stroke:col,'stroke-width':2},s2);const t=svgEl('text',{x:xn(1e6)-36,y:yn(Math.pow(1e6,-p))-6},s2);t.textContent=lab;t.setAttribute('style','fill:'+col);});
+    svgEl('circle',{cx:xn(n),cy:yn(Math.pow(n,-0.5)),r:4,fill:c.blue},s2);svgEl('circle',{cx:xn(n),cy:yn(Math.pow(n,-0.25)),r:4,fill:c.red},s2);
+    const tn=svgEl('text',{x:W/2-4,y:H-8},s2);tn.textContent='n';
+    read.innerHTML='n = <b>'+fmt(n,3)+'</b>, ε = 1/n = <b>'+fmt(eps,2)+'</b> · quadratic direction width ∝ n^-½ = <b>'+fmt(Math.pow(n,-0.5),3)+'</b> · quartic direction width ∝ n^-¼ = <b>'+fmt(Math.pow(n,-0.25),3)+'</b> · ratio <b>'+fmt(Math.pow(n,0.25),3)+'</b>';
+  }
+  rng.addEventListener('input',draw);draw();return draw;
+}
+
+/* ---------------- Fig: crossover ---------------- */
+function figCrossover(){
+  const dk=$('#cr-dk'),dl=$('#cr-dl'),svg=$('#cr-svg'),read=$('#cr-read'); if(!svg)return;
+  function draw(){
+    const DK=Math.pow(10,parseFloat(dk.value)),DL=parseFloat(dl.value);$('#cr-dk-val').textContent=fmt(DK,2);$('#cr-dl-val').textContent=DL.toFixed(1);
+    const c=colors();clear(svg);
+    const W=560,H=300,pad=44; const nmax=Math.max(200,Math.round(3.5*nstar(DK,DL)||2000));
+    const ymax=Math.max(DL*Math.log(nmax),nmax*DK)*1.05;
+    const xs=n=>pad+n/nmax*(W-2*pad), ys=y=>H-pad-y/ymax*(H-2*pad);
+    svgEl('line',{x1:pad,y1:H-pad,x2:W-pad,y2:H-pad,class:'axis'},svg);svgEl('line',{x1:pad,y1:pad,x2:pad,y2:H-pad,class:'axis'},svg);
+    let d1='',d2='';for(let i=0;i<=300;i++){const n=1+(nmax-1)*i/300;d1+=(i?'L':'M')+xs(n)+','+ys(n*DK)+' ';d2+=(i?'L':'M')+xs(n)+','+ys(DL*Math.log(n))+' ';}
+    svgEl('path',{d:d1,fill:'none',stroke:c.blue,'stroke-width':2},svg);svgEl('path',{d:d2,fill:'none',stroke:c.red,'stroke-width':2},svg);
+    const ns=nstar(DK,DL);
+    if(ns){svgEl('line',{x1:xs(ns),y1:pad,x2:xs(ns),y2:H-pad,stroke:c.ink3,'stroke-dasharray':'4 4'},svg);svgEl('circle',{cx:xs(ns),cy:ys(ns*DK),r:4.5,fill:c.ink},svg);const t=svgEl('text',{x:Math.min(xs(ns)+8,W-150),y:pad+14},svg);t.textContent='n* ≈ '+Math.round(ns);}
+    const t1=svgEl('text',{x:pad+8,y:pad+14},svg);t1.textContent='n·ΔK̂  (linear)';t1.setAttribute('style','fill:'+c.blue);
+    const t2=svgEl('text',{x:pad+8,y:pad+30},svg);t2.textContent='|Δλ|·log n';t2.setAttribute('style','fill:'+c.red);
+    const tx=svgEl('text',{x:W-pad-4,y:H-pad+14},svg);tx.textContent='n';
+    [0,0.5,1].forEach(f=>{const t=svgEl('text',{x:xs(f*nmax)-10,y:H-pad+26},svg);t.textContent=Math.round(f*nmax);});
+    read.innerHTML='ΔK̂ = <b>'+fmt(DK,2)+'</b>, |Δλ| = <b>'+DL.toFixed(1)+'</b> · crossover n* with n*ΔK̂ = |Δλ| log n*: <b>'+(ns?Math.round(ns):'none for n>1')+'</b>';
+  }
+  function nstar(DK,DL){let lo=2,hi=1e9;const f=n=>n*DK-DL*Math.log(n);if(f(hi)<0)return null;if(f(lo)>0){/* linear already wins at n=2: search below*/return null;}for(let i=0;i<80;i++){const mid=Math.sqrt(lo*hi);if(f(mid)>0)hi=mid;else lo=mid;}return hi;}
+  [dk,dl].forEach(r=>r.addEventListener('input',draw));draw();return draw;
+}
+
+/* ---------------- boot ---------------- */
+function boot(){
+  number(); wireRefs(); wireToc(); wireDer();
+  const redraws=[figPullback(),figEllipsoid(),figDegeneracies(),figLevelsets(),figScaling(),figCrossover()].filter(Boolean);
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>redraws.forEach(f=>f()));
+  new MutationObserver(()=>redraws.forEach(f=>f())).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  if(location.hash)setTimeout(flashTarget,300);
+  // typeset any math inside labels of controls that MathJax may have missed
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise($$('.controls'));
+}
+if(window.MathJax&&MathJax.startup&&MathJax.startup.promise){MathJax.startup.promise.then(boot);}
+else{document.addEventListener('DOMContentLoaded',()=>{const wait=()=>{if(window.MathJax&&MathJax.startup&&MathJax.startup.promise)MathJax.startup.promise.then(boot);else setTimeout(wait,100);};wait();});}
+})();
+</script>
+</body>
+</html>
