@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Empirical SLT: LLC Estimation, Susceptibilities, and Structural Inference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ---------- tokens ---------- */
+:root{
+  --paper:#FCFCFA; --paper-2:#F3F3EE; --ink:#1C1E24; --ink-2:#4B4F5A; --ink-3:#7A7E88; --rule:#DCDCD4;
+  --blue:#1E4FD8; --red:#C8102E; --green:#0E7C4A; --purple:#6D3FC4; --teal:#0F766E; --amber:#B45309; --grey:#5F6470; --indigo:#27348B;
+  --blue-bg:#EEF2FD; --red-bg:#FCEEF0; --green-bg:#EAF6F0; --purple-bg:#F2EDFB; --teal-bg:#E7F4F2; --amber-bg:#FBF1E4; --grey-bg:#F1F2F4; --indigo-bg:#ECEEF8;
+  --link:#1E4FD8; --flash:#FFF3B0;
+  --shadow:0 8px 24px rgba(20,22,27,.14);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#14161B; --paper-2:#1C1F26; --ink:#E8E6E0; --ink-2:#B7B9C0; --ink-3:#858994; --rule:#2C3039;
+    --blue:#7FA0F5; --red:#F07A8C; --green:#5CC79A; --purple:#B79AF0; --teal:#5FC3B7; --amber:#F0B461; --grey:#A3A8B3; --indigo:#A5B0F2;
+    --blue-bg:#1A2236; --red-bg:#2E1A20; --green-bg:#152A21; --purple-bg:#241C36; --teal-bg:#132A28; --amber-bg:#2E2416; --grey-bg:#1F2229; --indigo-bg:#1B1F38;
+    --link:#7FA0F5; --flash:#4A3F12;
+    --shadow:0 8px 24px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14161B; --paper-2:#1C1F26; --ink:#E8E6E0; --ink-2:#B7B9C0; --ink-3:#858994; --rule:#2C3039;
+  --blue:#7FA0F5; --red:#F07A8C; --green:#5CC79A; --purple:#B79AF0; --teal:#5FC3B7; --amber:#F0B461; --grey:#A3A8B3; --indigo:#A5B0F2;
+  --blue-bg:#1A2236; --red-bg:#2E1A20; --green-bg:#152A21; --purple-bg:#241C36; --teal-bg:#132A28; --amber-bg:#2E2416; --grey-bg:#1F2229; --indigo-bg:#1B1F38;
+  --link:#7FA0F5; --flash:#4A3F12;
+  --shadow:0 8px 24px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+
+/* ---------- base ---------- */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-size:17px;line-height:1.6;}
+a{color:var(--link);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--link) 40%,transparent)}
+a:hover{border-bottom-color:var(--link)}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+h1,h2,h3{font-family:"Newsreader",Georgia,serif;font-weight:500;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:2.6rem;font-weight:400;letter-spacing:-.01em}
+h2{font-size:1.75rem;margin-top:3.2rem;margin-bottom:.9rem;padding-top:1.2rem;border-top:1px solid var(--rule)}
+h3{font-size:1.25rem;margin-top:2.2rem;margin-bottom:.6rem}
+h2 .num,h3 .num{color:var(--ink-3);font-variant-numeric:tabular-nums;margin-right:.55em;font-weight:400}
+p{margin:.75rem 0}
+ul,ol{padding-left:1.4rem;margin:.6rem 0}
+li{margin:.25rem 0}
+u{text-decoration-thickness:1px;text-underline-offset:3px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+hr.sep{border:0;border-top:1px solid var(--rule);margin:2.5rem 0}
+
+/* ---------- layout ---------- */
+.wrap{display:grid;grid-template-columns:minmax(0,1fr);max-width:1200px;margin:0 auto;padding:0 1.25rem}
+@media (min-width:1080px){.wrap{grid-template-columns:230px minmax(0,1fr);gap:3rem}}
+main{width:100%;max-width:70ch;margin:0 auto;padding-bottom:6rem;min-width:0}
+@media (min-width:1080px){main{margin:0}}
+nav.toc{display:none}
+@media (min-width:1080px){
+  nav.toc{display:block;position:sticky;top:1.5rem;align-self:start;max-height:calc(100vh - 3rem);overflow:auto;padding:2.2rem 0 1rem;font-size:.86rem;line-height:1.35}
+  nav.toc ol{list-style:none;padding:0;margin:0}
+  nav.toc li{margin:.28rem 0}
+  nav.toc li.l3{padding-left:1rem;font-size:.8rem}
+  nav.toc a{color:var(--ink-2);border:0;display:block;padding:.1rem 0 .1rem .6rem;border-left:2px solid transparent}
+  nav.toc a.active{color:var(--ink);border-left-color:var(--red)}
+  nav.toc a:hover{color:var(--ink)}
+  nav.toc .toc-tools{margin-top:1.2rem;padding-top:.8rem;border-top:1px solid var(--rule)}
+}
+header.masthead{padding:3.5rem 0 1.5rem}
+header.masthead .disclaimer{font-size:.95rem;line-height:1.55;color:var(--ink-2);margin:1rem 0 0;padding-left:.9rem;border-left:2px solid var(--rule);max-width:62ch}
+header.masthead .meta{margin-top:1.1rem;display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:1.4rem;font-size:.8rem;color:var(--ink-2)}
+.legend span::before{content:"";display:inline-block;width:.6em;height:.6em;border-radius:50%;margin-right:.4em;background:var(--c);vertical-align:-.02em}
+button.tool{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);background:transparent;border:1px solid var(--rule);border-radius:3px;padding:.3rem .55rem;cursor:pointer}
+button.tool:hover{border-color:var(--ink-3);color:var(--ink)}
+
+/* ---------- equations & refs ---------- */
+.eq{position:relative;margin:.9rem 0;padding-right:3.2rem;overflow-x:auto;overflow-y:hidden;scroll-margin-top:5rem}
+.eq mjx-container[display="true"]{margin:.35rem 0!important}
+.eq .eqno{position:absolute;right:0;top:50%;transform:translateY(-50%);font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--ink-3);border:0;padding:.1rem .25rem}
+.eq .eqno:hover{color:var(--ink)}
+.eq.flash,.callout.flash,details.flash,figure.flash,h2.flash,h3.flash,.ref-target.flash,.tblwrap.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{background:var(--flash)}100%{background:transparent}}
+.eq.boxed mjx-container{padding:.3rem .6rem}
+a.ref,a.cite{white-space:nowrap}
+a.cite{font-family:"IBM Plex Mono",monospace;font-size:.82em}
+.popover{position:absolute;z-index:50;max-width:min(560px,92vw);background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:4px;box-shadow:var(--shadow);padding:.6rem .9rem;font-size:.92rem;line-height:1.45;pointer-events:none;overflow:hidden}
+.popover .eq{padding-right:0;margin:0}
+.popover .eqno{display:none}
+.popover .callout{margin:0;max-height:260px;overflow:hidden}
+.popover .pop-label{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:.25rem}
+.popover figure{margin:0}.popover figure .figbody{display:none}.popover figcaption{font-size:.85rem}
+.popover details{display:block}.popover details summary{display:none}.popover details>*{display:block}
+#backbtn{position:fixed;right:1rem;bottom:1rem;z-index:40;display:none;font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:0;border-radius:999px;padding:.55rem .9rem;cursor:pointer;box-shadow:var(--shadow)}
+#backbtn.show{display:block}
+
+/* ---------- callouts ---------- */
+.callout{margin:1.2rem 0;padding:.75rem 1rem .8rem 1.1rem;border-left:3px solid var(--c);background:var(--cbg);border-radius:0 4px 4px 0;scroll-margin-top:5rem}
+.callout .head{display:flex;flex-wrap:wrap;gap:.2rem .6rem;align-items:baseline;margin-bottom:.35rem}
+.callout .kind{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--c);font-weight:500}
+.callout .ttl{font-family:"Newsreader",serif;font-size:1.08rem;font-weight:500;color:var(--ink)}
+.callout>p:first-of-type{margin-top:.2rem}
+.callout>:last-child{margin-bottom:.1rem}
+.callout .eq{padding-right:2.6rem}
+.def{--c:var(--blue);--cbg:var(--blue-bg)}
+.int{--c:var(--red);--cbg:var(--red-bg)}
+.ex{--c:var(--green);--cbg:var(--green-bg)}
+.rem{--c:var(--purple);--cbg:var(--purple-bg)}
+.ahead{--c:var(--teal);--cbg:var(--teal-bg)}
+.warn{--c:var(--amber);--cbg:var(--amber-bg)}
+.der{--c:var(--grey);--cbg:var(--grey-bg)}
+.lem{--c:var(--indigo);--cbg:var(--indigo-bg)}
+details.callout{padding:0}
+details.callout summary{list-style:none;cursor:pointer;padding:.7rem 1rem .7rem 1.1rem;display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+details.callout summary::-webkit-details-marker{display:none}
+details.callout summary::before{content:"▸";font-family:"IBM Plex Mono",monospace;color:var(--c);transition:transform .15s}
+details.callout[open] summary::before{transform:rotate(90deg)}
+details.callout summary .hint{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+details.callout .body{padding:0 1rem .9rem 1.1rem}
+
+/* ---------- tables ---------- */
+.tblwrap{overflow-x:auto;margin:1rem 0}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th{text-align:left;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:500;padding:.4rem .6rem .4rem 0;border-bottom:1px solid var(--ink-3)}
+td{padding:.45rem .6rem .45rem 0;border-bottom:1px solid var(--rule);vertical-align:top}
+td:first-child{white-space:nowrap}
+.notation td:first-child{white-space:normal;width:36%}
+.notation td:nth-child(2){width:27%}
+.notation th:first-child{width:36%}.notation th:nth-child(2){width:27%}
+.notation td:nth-child(3){color:var(--ink-2);font-size:.9rem}
+table caption{caption-side:bottom;text-align:left;font-size:.85rem;color:var(--ink-2);padding:.5rem 0}
+.diagram{overflow-x:auto}
+
+/* ---------- figures ---------- */
+figure{margin:1.6rem 0;scroll-margin-top:5rem}
+figure .figbody{background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;padding:.9rem;overflow:hidden}
+figcaption{font-size:.88rem;color:var(--ink-2);margin-top:.55rem;line-height:1.45}
+figcaption .figno{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-right:.5em}
+.controls{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;align-items:center;margin-bottom:.7rem;font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--ink-2)}
+.controls label{display:flex;align-items:center;gap:.45rem}
+.controls input[type=range]{width:130px;accent-color:var(--red)}
+.controls select{font:inherit;font-size:.76rem;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:.15rem .3rem}
+.controls .val{min-width:5ch;color:var(--ink);font-variant-numeric:tabular-nums}
+.controls .seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.controls .seg button{font:inherit;background:transparent;color:var(--ink-2);border:0;padding:.25rem .55rem;cursor:pointer}
+.controls .seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.panels{display:grid;gap:.8rem;grid-template-columns:1fr}
+@media (min-width:640px){.panels.two{grid-template-columns:1fr 1fr}.panels.three{grid-template-columns:1fr 1fr 1fr}}
+.panel{min-width:0}
+.panel .plab{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--ink-3);margin-bottom:.3rem;text-align:center}
+canvas,svg.plot{display:block;width:100%;height:auto}
+.readout{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--ink-2);margin-top:.5rem;font-variant-numeric:tabular-nums}
+.readout b{color:var(--ink);font-weight:500}
+figure .paperfig{background:#fff;padding:.5rem}
+figure .paperfig img{display:block;width:100%;height:auto}
+.controls button.tool{font-size:.7rem}
+.p1previews{position:absolute;left:-9999px;top:0;width:520px;visibility:hidden}
+.popover .p1prev p{margin:.3rem 0}
+h1{font-size:2.2rem}
+svg.plot text{font-family:"IBM Plex Mono",monospace;font-size:10px;fill:var(--ink-2)}
+svg.plot .axis{stroke:var(--ink-3);stroke-width:1}
+svg.plot .grid{stroke:var(--rule);stroke-width:1}
+
+/* ---------- refs list ---------- */
+.refs{list-style:none;padding:0}
+.refs li>span:last-child{min-width:0;overflow-x:auto;overflow-y:hidden}
+.refs li{display:grid;grid-template-columns:5.5em minmax(0,1fr);gap:.6rem;margin:.6rem 0;scroll-margin-top:5rem}
+.refs .key{font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--ink-2)}
+.refs .note{color:var(--ink-2);font-size:.9rem}
+.circ{display:inline-block;width:1.35em;height:1.35em;border-radius:50%;border:1px solid currentColor;text-align:center;line-height:1.3em;font-size:.78em;margin-right:.35em;vertical-align:.05em}
+.next{font-family:"Newsreader",serif;font-size:1.15rem}
+</style>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'],['\\(','\\)']],
+    displayMath: [['$$','$$'],['\\[','\\]']],
+    processEscapes: true,
+    macros: {
+      X: '\\mathcal{X}', Y: '\\mathcal{Y}', R: '\\mathbb{R}', E: '\\mathbb{E}',
+      dd: '\\,\\mathrm{d}', ws: 'w^{*}', us: 'u^{*}', eps: '\\varepsilon', gr: '\\nabla', Zn: 'Z_n', Fn: 'F_n',
+      Cov: '\\mathrm{Cov}', Hil: '\\mathcal{H}', Cc: '\\mathcal{C}', lhat: '\\hat\\lambda', pig: '\\pi^{\\beta}_{\\gamma}',
+      xh: '\\hat{x}^{*}', vh: '\\hat{v}^{*}', lxy: '\\ell_{(x,y)}', Lp: '\\Lambda^{+}', Lpp: '\\Lambda^{++}'
+    }
+  },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  startup: { typeset: true }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" id="MathJax-script" async></script>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="Sections"><div class="eyebrow" style="margin-bottom:.6rem">Contents</div><ol id="toclist"></ol>
+<div class="toc-tools"><button class="tool" id="toggle-der">Expand derivations</button></div></nav>
+
+<main>
+<header class="masthead">
+  <div class="eyebrow">Informal notes · Part 2 · <a href="../slt-notes/">Part 1: Basics</a></div>
+  <h1>Empirical SLT: LLC Estimation, Susceptibilities, and Structural Inference</h1>
+  <p class="disclaimer">This is the second set of my informal notes on SLT; the first set is <a href="../slt-notes/">Singular Learning Theory: Basics</a>, and the same disclaimer applies. These are informal notes I originally sketched on my iPad while reading a variety of sources on SLT; any errors are mine, or transcription errors by Claude, which I asked to turn my handwritten notes and figures into this interactive page, so there may also be some notational clashes. Since I spent so much time writing these notes, this transcription is primarily meant for self-reference, and I'm making it public in case it is helpful to anyone else. Much of it may be rewriting things that seem obvious, but that is just the way I wrote stuff down explicitly and thought about things.</p>
+  <div class="meta"><span class="eyebrow">Siddharth Setlur · September 2026</span> <button class="tool" id="toggle-der-2">Expand derivations</button></div>
+  <div class="legend" aria-label="Callout colours">
+    <span style="--c:var(--blue)">Definition</span><span style="--c:var(--indigo)">Lemma</span><span style="--c:var(--red)">Intuition</span><span style="--c:var(--green)">Example</span><span style="--c:var(--purple)">Remark</span><span style="--c:var(--teal)">Looking ahead</span><span style="--c:var(--amber)">Caution</span><span style="--c:var(--grey)">Derivation (click to expand)</span>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<h2 id="sec:intro">Last time, this time</h2>
+
+<p><strong>Last time</strong> (<a href="../slt-notes/">Part 1, <em>Singular Learning Theory: Basics</em></a>):</p>
+<ul>
+<li>we defined the RLCT and the LLC;</li>
+<li>why SLT? It explains phenomena like phase transitions and other deep learning phenomena that are not explainable using classical setups (<a class="p1ref" href="../slt-notes/#sec:phase-transitions" data-ref="p1-phase">Part 1, Section 7.3</a>).</li>
+</ul>
+<p><strong>This time:</strong></p>
+<ul>
+<li>How to actually estimate the LLC in practice? (<a class="ref" data-ref="sec:llc"></a>)</li>
+<li>Susceptibilities and spectroscopy. (<a class="ref" data-ref="sec:susceptibilities"></a> to <a class="ref" data-ref="sec:empirical"></a>)</li>
+</ul>
+
+<div class="callout ahead" data-kind="ahead"><div class="head"><span class="kind">Looking ahead</span><span class="ttl">why we bother; repeated from <a class="ref" data-ref="sec:big-picture"></a></span></div>
+<p>Use the local learning coefficient we estimated as an observable to understand how the internal structure of a model depends on its training data. Susceptibilities provide a first order response of structural coordinates (attention heads, etc.) to shifts in the data distribution.</p>
+</div>
+
+<div class="callout rem" id="rem:notation" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">notation, relative to Part 1</span></div>
+<ul>
+<li>$L_n(w)=-\frac1n\sum_{i=1}^n\log p(x_i|w)$ is now the empirical loss, i.e. the average <em>negative</em> log-likelihood. In Part 1, $L_n$ was the log-likelihood $\sum_i\log p(x_i|w)$, so $L_n$ here is $-\frac1n L_n$ there, and <a class="p1ref" href="../slt-notes/#eq:Ln-Kn-Sn" data-ref="p1-eq1">Part 1, Eq. (1)</a> reads
+<div class="eq" id="eq:Ln-Kn-Sn">$$L_n(w)=K_n(w)+S_n .$$</div>
+This is the convention of Watanabe <a class="cite" data-ref="ref-Wat13">[Wat13]</a>, of <a class="cite" data-ref="ref-LLC23">[LLC23]</a> and of <a class="cite" data-ref="ref-Bak25">[Bak25]</a>.</li>
+<li>$L(w)=-\E_q\log p(y|x,w)$ is the population loss ($-\ell(w)=K(w)+S$ in Part 1). From <a class="ref" data-ref="sec:susceptibilities"></a> on, the data are pairs $(x,y)\in\X\times\Y$ and the model is $p(y|x,w)$.</li>
+<li>The prior is $\varphi$ (as in $\varphi(w)$ and $\varphi_\gamma$); an observable is $\phi$ (as in $\phi_C$). $\lxy(w)=-\log p(y|x,w)$ is the loss on a single sample; it is not the $\ell(w)$ of Part 1.</li>
+<li>$\eps$ is the SGLD step size (in Part 1 it was the KL-sublevel threshold).</li>
+<li>Some letters do double duty, because they follow the papers: $U$ is the neighbourhood of $\ws$ in <a class="ref" data-ref="sec:llc"></a> and the set of frozen parameters from <a class="ref" data-ref="sec:components"></a> on (and the matrix of left singular vectors in <a class="ref" data-ref="sec:mode-basis"></a>); $\beta$ is the inverse temperature, and also a mode index in <a class="ref" data-ref="sec:modes"></a>; $\gamma$ is the localization strength, and also names a mode in <a class="ref" data-ref="sec:spectroscopy"></a>; $C$ is a component, $\Cc$ the conditional distribution and $\mathbf C$ the coupling matrix in <a class="ref" data-ref="eq:X-CP"></a>; $d$ is $\dim W$ in <a class="ref" data-ref="sec:llc"></a> and indexes probe distributions afterwards.</li>
+</ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec:llc">Estimating the LLC</h2>
+
+<div class="callout ahead" data-kind="ahead"><div class="head"><span class="kind">Looking ahead</span><span class="ttl">the whole point; repeated from <a class="ref" data-ref="sec:estimator"></a></span></div>
+<p>We can compute $\lhat_U$ using just $L_n$ and sampling around.</p>
+</div>
+
+<h3 id="sec:estimand">The estimand</h3>
+<p>Let $\ws\in W$ be a local minimum (not necessarily global). This allows us to estimate $\lhat_U$ at any basin (suboptimal ones or mid training). Since $\ws\in W$ is local, $K_n(\ws)\ge 0$ (only $0$ at a global minimum).</p>
+<p>Recall (<a class="p1ref" href="../slt-notes/#eq:local-free-energy" data-ref="p1-eq30">Part 1, Section 7.2, Eq. (30)</a>) that for a neighbourhood $U\ni\ws$</p>
+<div class="eq" id="eq:local-F">$$\Fn(U)=nS_n+nK_n(U)+\lambda_U\log n+O(\log\log n),$$</div>
+<p>where $K_n(U)$ is the best empirical loss in $U$ (this was $\hat K_n(U)$ in Part 1), i.e. $K_n(\ws)$. Recall also from <a class="ref" data-ref="eq:Ln-Kn-Sn"></a> that</p>
+<div class="eq nonum">$$nL_n(\ws)=nS_n+nK_n(\ws).$$</div>
+<p>Therefore</p>
+<div class="eq" id="eq:local-F-Ln">$$\Fn(U)=nL_n(\ws)+\lambda_U\log n+O(\log\log n),$$</div>
+<p>which gives</p>
+<div class="eq boxed" id="eq:estimand">$$\boxed{\;\lhat_U=\frac{\Fn(U)-nL_n(\ws)}{\log n}\;}$$</div>
+<p>Now $L_n(\ws)=-\frac1n\sum_{i=1}^n\log p(x_i|\ws)$ is computable, but $\Fn(U)=-\log\Zn(U,1)$ is <u>not</u>:</p>
+<div class="eq" id="eq:ZU">$$\Zn(U,1)=\int_U e^{-nL_n(w)}\varphi(w)\dd w .$$</div>
+<p>(The second slot is the inverse temperature introduced in <a class="ref" data-ref="sec:beta"></a>; for now it is $1$.)</p>
+
+<h3 id="sec:localize">Building the restriction to $U$ into the prior</h3>
+<p>But we need to actually estimate stuff, so we need to sample. We can't do this over $U$, so build the restriction into $\varphi$: replace</p>
+<div class="eq" id="eq:phi-gamma">$$\varphi(w)\ \rightsquigarrow\ \varphi_\gamma(w)\propto e^{-\frac\gamma2\|w-\ws\|^2},$$</div>
+<p>a Gaussian bump of width $1/\sqrt\gamma$ around $\ws$. Then</p>
+<div class="eq" id="eq:ZU-gamma">$$\Zn(U,1)\approx\int_W e^{-nL_n(w)}\varphi_\gamma(w)\dd w .$$</div>
+<p>But $\Zn(U,1)$ is a $d=\dim W$ dimensional integral, and so we can't evaluate it. We need to estimate using Monte Carlo.</p>
+
+<h3 id="sec:beta">Introducing $\beta$</h3>
+<p>For reasons we won't go into, we cannot sample from $\Zn(U,1)$ using MCMC. So introduce a hyperparameter $\beta$,</p>
+<div class="eq nonum">$$\Zn(U,\beta)=\int_W e^{-n\beta L_n(w)}\varphi_\gamma(w)\dd w,\qquad \Fn(U,\beta)=-\log\Zn(U,\beta),$$</div>
+<p>and differentiate with respect to $\beta$:</p>
+<div class="eq" id="eq:dF-dbeta">$$\frac{\mathrm d}{\mathrm d\beta}\Fn(U,\beta)=\frac{\mathrm d}{\mathrm d\beta}\big(-\log\Zn(U,\beta)\big)=\frac{-1}{\Zn(U,\beta)}\,\frac{\mathrm d}{\mathrm d\beta}\Zn(U,\beta).$$</div>
+
+<details class="callout der" id="der:dF" data-kind="der"><summary><span class="kind">Derivation</span><span class="ttl">the $\beta$-derivative of the free energy is an expectation</span><span class="hint">expand</span></summary><div class="body">
+<div class="eq nonum">$$\begin{aligned}
+\frac{\mathrm d}{\mathrm d\beta}\Zn(U,\beta)&=\frac{\mathrm d}{\mathrm d\beta}\int_W e^{-n\beta L_n(w)}\varphi_\gamma(w)\dd w
+=\int_W\frac{\mathrm d}{\mathrm d\beta}\Big[e^{-n\beta L_n(w)}\Big]\varphi_\gamma(w)\dd w\\
+&=\int_W -nL_n(w)\,e^{-n\beta L_n(w)}\varphi_\gamma(w)\dd w ,
+\end{aligned}$$</div>
+<p>so, writing $Z(\beta)=\Zn(U,\beta)$,</p>
+<div class="eq nonum">$$\begin{aligned}
+\frac{\mathrm d}{\mathrm d\beta}\Fn(U,\beta)&=-\frac{1}{Z(\beta)}\int_W -nL_n(w)\,e^{-n\beta L_n(w)}\varphi_\gamma(w)\dd w\\
+&=\int_W nL_n(w)\,\frac{e^{-n\beta L_n(w)}\varphi_\gamma(w)}{Z(\beta)}\dd w .
+\end{aligned}$$</div>
+</div></details>
+
+<p>So</p>
+<div class="eq" id="eq:dF-integral">$$\frac{\mathrm d}{\mathrm d\beta}\Fn(U,\beta)=\int_W nL_n(w)\,\underbrace{\frac{e^{-n\beta L_n(w)}\varphi_\gamma(w)}{Z(\beta)}}_{\text{this is a density, call it }\pig}\dd w .$$</div>
+<p>Moreover</p>
+<div class="eq nonum">$$\int_W\frac{e^{-n\beta L_n(w)}\varphi_\gamma(w)}{Z(\beta)}\dd w=1,$$</div>
+<p>since $Z(\beta)=\int_W e^{-n\beta L_n(w)}\varphi_\gamma(w)\dd w$, so normalizing by $Z(\beta)$ gets us $1$. So</p>
+<div class="eq boxed" id="eq:dF-expectation">$$\boxed{\;\frac{\mathrm d}{\mathrm d\beta}\Fn(U,\beta)=\E^\beta_w\big[nL_n(w)\big]\;}$$</div>
+<p>where the expectation is against</p>
+<div class="eq" id="eq:pi">$$\pig(w)=\frac{e^{-n\beta L_n(w)}\varphi_\gamma(w)}{Z(\beta)} .$$</div>
+<p>Now if we draw $w_1,\dots,w_T\sim\pig$, the law of large numbers gives</p>
+<div class="eq" id="eq:lln">$$\E^\beta_w\big[nL_n\big]\approx\frac1T\sum_{t=1}^T nL_n(w_t).$$</div>
+
+<h3 id="sec:which-beta">Which $\beta$?</h3>
+<p>Going back to the original estimand (Eq. <a class="ref" data-ref="eq:local-F-Ln"></a>), at inverse temperature $\beta$</p>
+<div class="eq" id="eq:F-beta">$$\Fn(U,\beta)\approx(n\beta)L_n(\ws)+\lhat_U\log(n\beta),$$</div>
+<p>so</p>
+<div class="eq" id="eq:dF-beta-approx">$$\frac{\partial}{\partial\beta}\Fn(U,\beta)\approx nL_n(\ws)+\frac{\lhat_U}{\cancel{n}\beta}\cdot\cancel{n}=nL_n(\ws)+\frac{\lhat_U}{\beta}.$$</div>
+<p>But we originally wanted $\beta=1$, i.e. $\Fn(U,1)=nL_n(\ws)+\lhat_U\log n$. Compare this with <a class="ref" data-ref="eq:dF-beta-approx"></a>: we ask for the <em>derivative</em> at inverse temperature $\beta$ to reproduce the free energy at $\beta=1$,</p>
+<div class="eq" id="eq:beta-star">$$\begin{aligned}\frac{\partial}{\partial\beta}\Fn(U,\beta)\approx nL_n(\ws)+\frac{\lhat_U}{\beta}\ &\overset{!}{=}\ nL_n(\ws)+\lhat_U\log n=\Fn(U,1)\\ &\Longrightarrow\quad\boxed{\;\beta=\frac{1}{\log n}\;}\,!\end{aligned}$$</div>
+<p>So this is not an identity between a free energy and its derivative: it says $\partial_\beta\Fn(U,\beta)\approx\Fn(U,1)$ when $\beta=1/\log n$. This is Watanabe's WBIC <a class="cite" data-ref="ref-Wat13">[Wat13]</a>.</p>
+
+<h3 id="sec:estimator">The estimator</h3>
+<p>Now substituting <a class="ref" data-ref="eq:dF-expectation"></a> and <a class="ref" data-ref="eq:lln"></a>, at the $\beta$ of <a class="ref" data-ref="eq:beta-star"></a>, back into <a class="ref" data-ref="eq:estimand"></a>,</p>
+<div class="eq boxed" id="eq:estimator">$$\boxed{\;\lhat_U=\frac{\Fn(U)-nL_n(\ws)}{\log n}=\frac{\dfrac1T\displaystyle\sum_{t=1}^T nL_n(w_t)-nL_n(\ws)}{\log n}\;}$$</div>
+<p>where</p>
+<div class="eq nonum">$$w_t\sim\pig=\frac{e^{-n\beta L_n(w)}\varphi_\gamma(w)}{Z(\beta)},\qquad\beta=\frac{1}{\log n}.$$</div>
+<p>This is the estimator of <a class="cite" data-ref="ref-LLC23">[LLC23]</a>.</p>
+
+<div class="callout int" id="int:whole-point" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">the whole point</span></div>
+<p>We can compute $\lhat_U$ using just $L_n$ and sampling around.</p>
+<ul>
+<li>Given $\ws$, we want to understand the loss landscape in $U\ni\ws$, which is why we want to estimate $\lambda_U$.</li>
+<li>$\lhat_U$ is <a class="ref" data-ref="eq:estimator"></a>, with $w_t\sim\pig$ and $\beta=\frac{1}{\log n}$. Sample using SGLD (<a class="ref" data-ref="sec:sgld"></a>).</li>
+</ul>
+</div>
+
+<h3 id="sec:sgld">Sampling with SGLD, and what $\beta$ and $\gamma$ do</h3>
+<p>How to sample from $\pig$? This is where SGLD comes in! In particular</p>
+<div class="eq" id="eq:grad-log-pi">$$\gr_w\log\pig(w)=-n\beta\,\gr L_n(w)-\gamma\,(w-\ws),$$</div>
+<p>since $Z(U,\beta)$ has no $w$ dependence. Sample using SGLD:</p>
+<div class="eq" id="eq:sgld">$$w_{t+1}=w_t-\eps\Big[\underbrace{n\beta}_{(1)}\gr L_n(w_t)+\underbrace{\gamma}_{(2)}(w_t-\ws)\Big]+\text{noise}.$$</div>
+<ol>
+<li>$n\beta$ is the weighting of the loss. $\beta\to\infty$: only care about loss steps, never leave $\ws$. $\beta\to0$: completely ignore $L_n$, i.e. ignore the model, the prior dominates.</li>
+<li>$\gamma$ is the weight confining to $U$.</li>
+</ol>
+
+<p>$\gamma$ keeps the $w_t$'s in $U$ by:</p>
+<p><span class="circ">1</span>If $w_t$ hits a flat direction, then $\gr L_n(w_t)=0$ along that direction, and so it would wander super far away from $\ws$ without a $\gamma$ correction. See <a class="ref" data-ref="fig:sgld"></a> (flat direction): an example with degenerate directions, the ellipsoid of <a class="p1ref" href="../slt-notes/#fig:ellipsoid" data-ref="p1-fig2">Part 1, Figure 2</a> with a $\kappa=0$ eigenvalue, and SGLD wandering away.</p>
+<p><span class="circ">2</span>$\gamma$ keeps the chain in the basin defined by the local minimum of interest (<a class="ref" data-ref="fig:sgld"></a>, two basins).</p>
+
+<figure id="fig:sgld" data-kind="fig">
+<div class="figbody">
+  <div class="controls">
+    <span class="seg" role="group" aria-label="landscape"><button id="sg-flat" aria-pressed="true">flat direction: L = ½a²</button><button id="sg-basins" aria-pressed="false">two basins</button></span>
+    <label>$\gamma$ <input type="range" id="sg-gamma" min="0" max="100" step="1" value="0"> <span class="val" id="sg-gamma-val"></span></label>
+    <button class="tool" id="sg-run" type="button">Run</button>
+    <button class="tool" id="sg-reset" type="button">Restart chain</button>
+  </div>
+  <canvas id="sg-canvas" width="600" height="360" aria-label="SGLD chain on a loss landscape"></canvas>
+  <div class="readout" id="sg-read"></div>
+</div>
+<figcaption>SGLD, <a class="ref" data-ref="eq:sgld"></a>, started at $\ws$ (red). The dashed circle is the width $1/\sqrt\gamma$ of the Gaussian bump $\varphi_\gamma$. <em>Flat direction:</em> $L=\tfrac12a^2$ has a $\kappa=0$ eigenvalue (the $b$ direction); with $\gamma=0$ the chain wanders off along it, a moderate $\gamma$ confines it while still letting it explore, and with $\gamma$ too large there is no exploration and $\lhat$ is off (the true $\lambda$ here is $\tfrac12$). <em>Two basins:</em> with $\gamma=0$ the chain crosses into the neighbouring (deeper) basin; with $\gamma&gt;0$ it stays in the basin of $\ws$. Schematic: $n\beta=20$ and $L_n$ is replaced by $L$.</figcaption>
+</figure>
+
+<p>Have to pick $\gamma$ large enough to constrain to $U$ but <u>small enough to allow for exploring</u> $U$ (<a class="ref" data-ref="fig:sgld"></a>: high $\gamma$ means no exploration).</p>
+<p><strong>In practice.</strong> Sweep $\gamma$ and find the range of $\gamma$ where $\lhat$ does not depend on it.</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:susceptibilities">Susceptibilities</h2>
+
+<h3 id="sec:big-picture">The big picture</h3>
+<div class="callout int" id="int:big-picture" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">the big picture</span></div>
+<p>Use the local learning coefficient we estimated as an observable to understand how the internal structure of a model depends on its training data. Susceptibilities provide a first order response of structural coordinates (attention heads, etc.) to shifts in the data distribution,</p>
+<div class="eq nonum">$$\frac{\partial\,\text{structure}}{\partial\,\text{data}} .$$</div>
+<div class="eq nonum">$$\text{Structure in data}\ \longleftrightarrow\ \text{Structure in models}.$$</div>
+</div>
+<p>This section follows <em>Structural Inference: Interpreting Small Language Models with Susceptibilities</em>, Baker et al. <a class="cite" data-ref="ref-Bak25">[Bak25]</a>.</p>
+
+<div class="callout ahead" data-kind="ahead"><div class="head"><span class="kind">Looking ahead</span><span class="ttl">repeated from <a class="ref" data-ref="sec:small-lm"></a></span></div>
+<p>The principal components of the matrix of susceptibilities are identified with patterns in the data, while the loadings (right singular vectors) are identified with structure in the model. Build a bridge between structure in data and structure in models.</p>
+</div>
+
+<p><strong>Setup.</strong> Standard learning problem $(p,q,\varphi)$ setup as earlier (<a class="p1ref" href="../slt-notes/#sec:learning-problem" data-ref="p1-setup">Part 1, Section 2</a>).</p>
+
+<h3 id="sec:perturb">Perturbing the data distribution</h3>
+<div class="callout rem" id="rem:annealed" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">tempered posteriors everywhere</span></div>
+<p>Note that we work with tempered posteriors everywhere (recall from the estimation section, <a class="ref" data-ref="sec:beta"></a>):</p>
+<div class="eq" id="eq:annealed">$$p^\beta_n(w):=\frac{1}{Z^\beta_n}e^{-n\beta L(w)}\varphi(w),\qquad Z^\beta_n=\int_W e^{-n\beta L(w)}\varphi(w)\dd w .$$</div>
+<p>These are <em>annealed</em> posteriors, using $L(w)$ instead of $L_n$. This is purely theoretical, and in practice we use the standard tempered posterior from earlier (Eq. <a class="ref" data-ref="eq:pi"></a>) with $L_n(w)$.</p>
+</div>
+
+<p><strong>Now the core question: how does the model change if we perturb the underlying data distribution from $q$ to $q_h$, $h$ small?</strong></p>
+<ul>
+<li>$q(x,y)$ is a probability distribution on $\X\times\Y$;</li>
+<li>$h$ ranges over an interval of $\R$ containing $0$;</li>
+<li>$q_h(x,y)$ is also a probability density on $\X\times\Y$;</li>
+<li>assume $h\mapsto q_h$ is differentiable.</li>
+</ul>
+<p>We can now define all the things we defined using $q$ using $q_h$ instead. In particular</p>
+<div class="eq" id="eq:Lh">$$L^h(w)=-\E_{q_h}\log p(y|x,w)$$</div>
+<p>is the negative log-likelihood for $q_h$, and can be used to define a corresponding annealed posterior</p>
+<div class="eq" id="eq:annealed-h">$$p^\beta_n(w|h)=\frac{1}{Z^{\beta,h}_n}e^{-n\beta L^h(w)}\varphi(w),\qquad Z^{\beta,h}_n=\int_W e^{-n\beta L^h(w)}\varphi(w)\dd w .$$</div>
+<p>We will primarily work with $h\in[0,1]$ and</p>
+<div class="eq" id="eq:mixture">$$q_h=(1-h)\,q+h\,q',$$</div>
+<p>where $q'$ is another density on $\X\times\Y$ and $q_h$ interpolates between them. See <a class="ref" data-ref="fig:tangent-map"></a>.</p>
+
+<figure id="fig:tangent-map" data-kind="fig">
+<div class="figbody">
+  <div class="controls">
+    <label>$h$ <input type="range" id="tm-h" min="0" max="1" step="0.01" value="0.35"> <span class="val" id="tm-h-val"></span></label>
+  </div>
+  <svg class="plot" id="tm-svg" viewBox="0 0 660 270" role="img" aria-label="Data distributions map to posteriors, whose observables map to the reals"></svg>
+  <div class="readout" id="tm-read"></div>
+</div>
+<figcaption>A perturbation $q\to q_h$ of the data distribution (left) moves the posterior (middle), and we watch how the expectations of observables (right) change with respect to $h$. That's it! Move $h$. Schematic, after Figure 6 of <a class="cite" data-ref="ref-Bak25">[Bak25]</a>.</figcaption>
+</figure>
+
+<h3 id="sec:observables">Observables and susceptibilities</h3>
+<p>Let $\phi:W\to\R$ be an observable. We consider the expectation</p>
+<div class="eq" id="eq:expectation">$$\langle\phi\rangle_{\beta,h}=\int\phi(w)\,p^\beta_n(w|h)\dd w .$$</div>
+<p><strong>Note.</strong> $h=0$ is just the unperturbed model. We want to examine how this observable changes with respect to $h$.</p>
+
+<div class="callout def" id="def:susceptibility" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Susceptibility</span></div>
+<div class="eq" id="eq:chi">$$\chi=\frac{1}{n\beta}\,\frac{\partial}{\partial h}\langle\phi\rangle_{\beta,h}\Big|_{h=0}.$$</div>
+<p>$\chi$ is the susceptibility of $\phi$ to the perturbation $q_h$ at inverse temperature $\beta$.</p>
+</div>
+
+<p>A nice lemma allows us to actually compute susceptibilities.</p>
+
+<div class="callout lem" id="lem:cov" data-kind="lem"><div class="head"><span class="kind">Lemma</span><span class="ttl">susceptibility as a covariance</span></div>
+<p><a class="cite" data-ref="ref-Bak25">[Bak25, Lemma 2.2]</a></p>
+<div class="eq" id="eq:chi-cov">$$\chi=-\Cov_\beta\big[\phi,\Delta L\big],$$</div>
+<p>where</p>
+<div class="eq nonum">$$\Cov_\beta[\phi,\Delta L]=\langle\phi\,\Delta L\rangle_\beta-\langle\phi\rangle_\beta\langle\Delta L\rangle_\beta,\qquad \Delta L=\frac{\partial L^h}{\partial h}\Big|_{h=0}.$$</div>
+</div>
+
+<div class="callout lem" id="lem:mixture" data-kind="lem"><div class="head"><span class="kind">Lemma</span><span class="ttl">the mixture perturbation</span></div>
+<p><a class="cite" data-ref="ref-Bak25">[Bak25, Lemma 2.3]</a> For the standard $q_h=(1-h)q+hq'$,</p>
+<div class="eq" id="eq:DeltaL">$$\Delta L(w)=L'(w)-L(w),$$</div>
+<p>where $L(w)=L^0(w)$ is the unperturbed loss, using $q$, and $L'(w)=L^1(w)$ is the perturbed loss, using $q'$.</p>
+</div>
+
+<div class="callout int" data-kind="int"><div class="head"><span class="kind">Intuition</span></div>
+<p>The lemmas allow for computation of the susceptibility in terms of the <em>unperturbed</em> posterior.</p>
+</div>
+
+<h3 id="sec:components">Components</h3>
+<p>Remember that the models are parameterized by weights $w\in W$. We pick a subset of weights of interest, called a <strong>component</strong> $C$. We do this because looking at the covariance with respect to individual weights is far too noisy.</p>
+
+<div class="callout ex" id="ex:component" data-kind="ex"><div class="head"><span class="kind">Example</span><span class="ttl">a component</span></div>
+<p>$C$ could be a particular attention head, i.e. $W_O,W_V,W_Q,W_K$ of that attention head.</p>
+</div>
+
+<div class="callout def" id="def:component" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Component</span></div>
+<p>Formally a component is a decomposition $W=U\times C$, where $U$ is the set of parameters not in $C$, that are held frozen.</p>
+</div>
+
+<h3 id="sec:observable">The observable</h3>
+<p>Recall that the LLC at a local minimum $\ws\in W$ is given by</p>
+<div class="eq" id="eq:llc-expectation">$$\lhat(\ws)=n\beta\,\E^\beta_{w|\ws,\gamma}\big[L_n(w)-L_n(\ws)\big],$$</div>
+<p>where $\E^\beta_{w|\ws,\gamma}$ is the expectation against $\pig$ of <a class="ref" data-ref="eq:pi"></a>.</p>
+
+<details class="callout der" id="der:rearrange" data-kind="der"><summary><span class="kind">Derivation</span><span class="ttl">the rearrangement of terms that gets this expression from the estimand we had earlier</span><span class="hint">expand</span></summary><div class="body">
+<p>Start from <a class="ref" data-ref="eq:estimator"></a>, written with the expectation <a class="ref" data-ref="eq:dF-expectation"></a> in place of the sample average, and use $\beta=\frac1{\log n}$ (Eq. <a class="ref" data-ref="eq:beta-star"></a>):</p>
+<div class="eq nonum">$$\begin{aligned}
+\lhat_U&=\frac{\E^\beta_w[nL_n(w)]-nL_n(\ws)}{\log n}
+=n\cdot\frac{1}{\log n}\Big(\E^\beta_w[L_n(w)]-L_n(\ws)\Big)\\
+&=n\beta\,\E^\beta_w\big[L_n(w)-L_n(\ws)\big],
+\end{aligned}$$</div>
+<p>since $L_n(\ws)$ is a constant and can be moved inside the expectation.</p>
+</div></details>
+
+<p>Now the $\lhat(\ws)$ above is the LLC for the unperturbed $q$. For a $q_h$, we just need to take expectations with this instead, i.e. the losses change:</p>
+<div class="eq" id="eq:llc-h">$$\lhat(\ws,q_h)=n\beta\,\E^\beta_{w|\ws,\gamma}\big[L^h_n(w)-L^h_n(\ws)\big].$$</div>
+<p>Finally, we are only interested in the $w$ in the component $C$ of interest. Since $W=U\times C$, we can write $w=(u,v)$ with $u\in U$, $v\in C$ for all $w\in W$. Then</p>
+<div class="eq" id="eq:llc-hC">$$\begin{aligned}
+\lhat(\ws,q_h,C)&=n\beta\,\E^\beta_{w|\ws,\gamma}\Big[\delta(u-\us)\big(L^h_n(w)-L^h_n(\ws)\big)\Big]\\
+&=n\beta\,\Big\langle\underbrace{\delta(u-\us)\big(L^h_n(w)-L^h_n(\ws)\big)}_{\phi_C\text{: this is our observable}}\Big\rangle_h .
+\end{aligned}$$</div>
+<p>Now differentiate with respect to $h$ at $h=0$. There are two places where $h$ enters, the posterior and the observable, so the product rule gives two terms:</p>
+<div class="eq" id="eq:chi-llc">$$\begin{aligned}\frac{1}{(n\beta)^2}\frac{\partial}{\partial h}\lhat(\ws,q_h,C)\Big|_{h=0}&=\underbrace{\frac{1}{n\beta}\frac{\partial}{\partial h}\langle\phi_C\rangle_{h}\Big|_{h=0}}_{\chi\text{, observable frozen at }h=0}\\&\quad+\underbrace{\frac{1}{n\beta}\Big\langle\delta(u-\us)\big(\Delta L(w)-\Delta L(\ws)\big)\Big\rangle}_{\text{the observable moving with }h} .\end{aligned}$$</div>
+<p>So $\chi$ (<a class="ref" data-ref="def:susceptibility"></a>, for the observable below) is one of two terms in $\partial_h\lhat$, not all of it. This is what <a class="cite" data-ref="ref-Bak25">[Bak25, Appendix D.3]</a> means by “related to”.</p>
+
+<div class="callout def" id="def:phiC" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">The observable $\phi_C$</span></div>
+<p>So we set</p>
+<div class="eq" id="eq:phiC">$$\phi_C(w)=\delta(u-\us)\big[L(w)-L(\ws)\big],$$</div>
+<p>where $W=U\times C$.</p>
+</div>
+
+<div class="callout rem" id="rem:no-h" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">no $h$ dependence in $\phi_C$</span></div>
+<p>Note that here $L(w)$ and $L(\ws)$ have no $h$ dependence, it's the unperturbed $L$. The dependence on $h$ above was to motivate the interpretation of $\phi_C$ as the rate of change of the LLC (it is one of the two terms in <a class="ref" data-ref="eq:chi-llc"></a>).</p>
+</div>
+
+<div class="callout rem" id="rem:slope" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">the LLC sets the magnitude, the slope sets the sign</span></div>
+<p>Write $E(w)=L(w)-L(\ws)$ for the excess loss, and treat $\delta(u-\us)$ as restricting the posterior to the slice where only the weights of $C$ move, so that $\phi_C=E$ and all expectations below are over that slice. There $L=E+\text{const}$, so by <a class="ref" data-ref="lem:cov"></a> and <a class="ref" data-ref="lem:mixture"></a></p>
+<div class="eq" id="eq:chi-slope">$$\begin{aligned}\chi&=-\Cov_\beta\big[E,\,L'-L\big]=\mathrm{Var}_\beta(E)-\Cov_\beta\big[E,L'\big]=\mathrm{Var}_\beta(E)\,(1-b),\\ b&:=\frac{\Cov_\beta[E,L']}{\mathrm{Var}_\beta(E)},\end{aligned}$$</div>
+<p>where $b$ is the slope of the perturbed loss $L'$ against $E$ over the posterior. The volume scaling $\mathrm{Vol}(\eps)\propto\eps^{\lambda}$ of <a class="p1ref" href="../slt-notes/#eq:vol" data-ref="p1-eq28">Part 1, Eq. (28)</a> makes $n\beta E$ approximately $\mathrm{Gamma}(\lambda_C)$ distributed, with $\lambda_C$ the LLC refined to $C$. So $\langle E\rangle_\beta\approx\lambda_C/(n\beta)$, which is <a class="ref" data-ref="eq:llc-expectation"></a>, and $\mathrm{Var}_\beta(E)\approx\lambda_C/(n\beta)^2$. Therefore</p>
+<div class="eq boxed" id="eq:chi-magnitude-sign">$$\boxed{\;\chi\approx\frac{\lambda_C}{(n\beta)^2}\,(1-b)\;}$$</div>
+<p>The LLC sets the magnitude, the slope sets the sign.</p>
+<p>In the linear case $L'(w)-L'(\ws)=b\,E(w)$, the second term of <a class="ref" data-ref="eq:chi-llc"></a> is $\frac{1}{n\beta}(b-1)\langle E\rangle_\beta\approx-\frac{\lambda_C}{(n\beta)^2}(1-b)$, and the two terms cancel: the posterior for $q_h$ is just the posterior for $q$ at inverse temperature $\beta\big(1+h(b-1)\big)$, and $\lhat$ does not depend on the temperature. So the refined LLC can be constant while $\chi\neq0$.</p>
+</div>
+
+<h3 id="sec:per-token">Per-token susceptibility</h3>
+<p>In practice we use the per-token susceptibility.</p>
+
+<div class="callout def" id="def:per-token" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Per-token susceptibility</span></div>
+<p>The per-token susceptibility of $C$ for $(x,y)\in\X\times\Y$ is</p>
+<div class="eq" id="eq:per-token">$$\chi^C_{(x,y)}=-\Cov_\beta\big(\phi_C,\ \lxy(w)-L(w)\big),$$</div>
+<p>where $\lxy(w)=-\log p(y|x,w)$.</p>
+<p>$x$ is a sequence of tokens (the context) and $y$ is a single token.</p>
+</div>
+
+<div class="callout int" id="int:point-mass" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">the perturbation is a point mass</span></div>
+<p>This is the same susceptibility formula (<a class="ref" data-ref="lem:cov"></a>, <a class="ref" data-ref="lem:mixture"></a>) with</p>
+<div class="eq nonum">$$L'(w)=-\E_{\delta_{(x,y)}}\log p=\lxy(w):$$</div>
+<p>the perturbed distribution is just a point mass on $(x,y)$. We check the covariance of</p>
+<div class="eq nonum">$$\underbrace{\delta(u-\us)\big(L(w)-L(\ws)\big)}_{(\mathrm a)}\quad\longleftrightarrow\quad\underbrace{\lxy(w)-L(w)}_{(\mathrm b)} .$$</div>
+<ol type="a">
+<li>The excess loss from perturbing the weights of $C$. Here the loss is just the unperturbed population loss.</li>
+<li>How much worse does the model with weights $w$ do on $q'$ (here upweighting $(x,y)$) than on the training distribution $q$.</li>
+</ol>
+</div>
+
+<h3 id="sec:chi-estimation">Estimation</h3>
+<p>Just as in the previous section (<a class="ref" data-ref="sec:llc"></a>), where we learned how to estimate the LLC, the key here is, given a local minimum $\ws$, to sample chains $w_t$ from a posterior in the neighbourhood of $\ws$.</p>
+
+<div class="callout int" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">where the loss landscape is hiding</span></div>
+<p>Just as in the LLC estimator, the loss landscape is hiding here in the posterior we draw from for SGLD.</p>
+</div>
+
+<p>In particular, use SGLD to draw $w_t$ using the same procedure as earlier (<a class="ref" data-ref="sec:sgld"></a>), with the parameters not in $C$ held frozen (<a class="ref" data-ref="def:component"></a>).</p>
+<p><span class="circ">1</span>Compute $L_n(w_t)-L_n(\ws)$. This is the $\phi_C(w)$ component.</p>
+<p><span class="circ">2</span>Compute $\lxy(w_t)-L_n(w_t)$. This is the $L'(w)-L(w)$ component.</p>
+<p>Then $\chi^C_{(x,y)}(\ws)$ is $-1$ times the covariance between <span class="circ">1</span> and <span class="circ">2</span>.</p>
+<p>In the full estimator of <a class="cite" data-ref="ref-Bak25">[Bak25, Eq. (24)]</a> the covariance is written out as $-\langle\phi\,\Delta L\rangle+\langle\phi\rangle\langle\Delta L\rangle$: the paired product and $\langle\phi\rangle$ use the chain restricted to $C$, while the $\langle\Delta L\rangle$ factor is taken from a separate, unrestricted chain.</p>
+
+<h3 id="sec:expression">Expression and suppression</h3>
+
+<div class="callout rem" id="rem:bxy" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">making the slope $b_{xy}$ explicit</span></div>
+<p>With $L'=\lxy$ in <a class="ref" data-ref="rem:slope"></a>,</p>
+<div class="eq" id="eq:chi-bxy">$$\begin{aligned}\chi^C_{(x,y)}&=\mathrm{Var}_\beta(E)-\Cov_\beta\big[E,\lxy\big]=\mathrm{Var}_\beta(E)\,(1-b_{xy}),\\ b_{xy}&=\frac{\Cov_\beta[E,\lxy]}{\mathrm{Var}_\beta(E)} .\end{aligned}$$</div>
+<p>So the criterion is $b_{xy}&gt;1$ for expression and $b_{xy}&lt;1$ for suppression, and $b_{xy}=0$ ($\lxy$ uncorrelated with $E$) already gives $\chi&gt;0$. Both readings of $\chi&gt;0$ below are covered: “does not have a correlated effect” is $b_{xy}\approx0$, and “$\lxy(w)$ went down” is $b_{xy}&lt;0$. The covariance in <a class="ref" data-ref="tab:expression"></a> is negative in both cases only because of the $-L$.</p>
+<p>Since $L=\E_q[\lxy]$, the average of $b_{xy}$ over $q$ is $1$: the average token is the reference. Degrading $C$ raises the loss of the average token with slope $1$; $C$ expresses $x\rightsquigarrow y$ when the loss of this token rises faster than that. This is also what <a class="ref" data-ref="caut:raw"></a> is implicitly appealing to.</p>
+</div>
+
+<div class="tblwrap" id="tab:expression" data-kind="tab"><table>
+<thead><tr><th>Sign</th><th>Name</th><th>Covariance</th><th>Slope</th><th>Reading</th></tr></thead>
+<tbody>
+<tr><td>$\chi&lt;0$</td><td>Expression</td><td>$\Cov\big(\phi_C,\ \lxy-L\big)&gt;0$</td><td>$b_{xy}&gt;1$</td><td>On average, the draws of $w$ where $L(w)-L(\ws)$ is worse than normal are also where $\lxy(w)-L(w)$ is higher than usual.</td></tr>
+<tr><td>$\chi&gt;0$</td><td>Suppression</td><td>$\Cov\big(\phi_C,\ \lxy-L\big)&lt;0$</td><td>$b_{xy}&lt;1$</td><td>On average, draws where $L(w)-L(\ws)$ is higher than usual don't really correlate with $\lxy(w)-L(w)$ being higher than usual. (Uncorrelated, $b_{xy}\approx0$, is already enough; anticorrelated, $b_{xy}&lt;0$, is more so.)</td></tr>
+</tbody>
+<caption><span class="figno tabno"></span>The sign of the per-token susceptibility $\chi^C_{(x,y)}$ <a class="cite" data-ref="ref-Bak25">[Bak25, Section 3.2]</a>. Here $\phi_C=\delta(u-\us)(L(w)-L(\ws))$ and $b_{xy}$ is the slope of <a class="ref" data-ref="rem:bxy"></a>.</caption>
+</table></div>
+
+<div class="callout int" id="int:expression" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">expression, $\chi&lt;0$</span></div>
+<p>$C$ expresses the fact that context $x$ should be continued by $y$. Perturbations of the weights of $C$ that increase the population loss more than usual correlate with perturbations that make $y$ less likely to be predicted given $x$. $C$ is susceptible to the pattern $x\rightsquigarrow y$.</p>
+</div>
+
+<div class="callout int" id="int:suppression" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">suppression, $\chi&gt;0$</span></div>
+<p>$C$ is not susceptible to the pattern $x\rightsquigarrow y$. Perturbations of $\ws$ that degrade $C$ more than usual do not have a correlated effect on predicting $y$ given $x$.</p>
+</div>
+
+<div class="callout int" id="int:expression-again" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">the same thing again, perturbing $\ws\rightsquigarrow w$</span></div>
+<p>Note that $\chi=-\Cov[\,\cdot\,,\cdot\,]$.</p>
+<p><strong>$\chi&lt;0$: expression, negative susceptibility.</strong> Perturbing $\ws\rightsquigarrow w$:</p>
+<p><span class="circ">1</span>$\lxy(w)-L(w)$ is positive, so predicting $y$ given the context of $x$ is less likely.</p>
+<p><span class="circ">2</span>$\delta(u-\us)\big(L(w)-L(\ws)\big)$ is also high, i.e. the overall population loss increases by perturbing <u>only</u> the weights of $C$.</p>
+<p><strong>$\chi&gt;0$: suppression, positive susceptibility.</strong> Perturbing $\ws\rightsquigarrow w$:</p>
+<p><span class="circ">1</span>$\lxy(w)$ decreases compared to $L(w)$.</p>
+<p><span class="circ">2</span>$\delta(u-\us)\big(L(w)-L(\ws)\big)$ goes up. So though I messed up the weights of $C$, $\lxy(w)$ went down. $C$ was not involved in the continuation of $x$ by $y$.</p>
+</div>
+
+<div class="callout rem" id="rem:standardized" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">standardized susceptibilities</span></div>
+<p>The interpretation above requires separating off the term in $\chi^C_{(x,y)}$ that does not depend on $(x,y)$ and only considering the summand that does. These are called <strong>standardized susceptibilities</strong>.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec:structural">Susceptibilities for Structural Inference</h2>
+<p>The main object of study is the following.</p>
+
+<div class="callout def" id="def:response-matrix" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Data matrix / response matrix</span></div>
+<p>Let $\{C_j\}_{j\in H}$ be a finite set of components (e.g. all attention heads) with associated observables $\phi_j:=\phi_{C_j}$, and let $\{q^d\}_{d\in D}$ be a finite set of data distributions (which we use to define $q^d_h=(1-h)q+hq^d$). $\{q^d\}_{d\in D}$ is called the <strong>probe set</strong> and its elements $q^d$ are called <strong>probe distributions</strong>. Define the $|D|\times|H|$ matrix</p>
+<div class="eq" id="eq:response-matrix">$$X=\big(\hat\chi^d_j\big)_{d\in D,\,j\in H},$$</div>
+<p>where $\hat\chi^d_j$ is the estimated susceptibility of component $C_j$ to the probe distribution $q^d$.</p>
+</div>
+
+<div class="callout int" id="int:whole-point-X" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">the whole point</span></div>
+<p>Now the whole point is that we can learn about the internal structure of the model by looking at the structure of $X$ (e.g. by SVD and PCA, as in this paper <a class="cite" data-ref="ref-Bak25">[Bak25]</a>, or by clustering rows of $X$, as in the follow-up <em>Towards Spectroscopy</em> paper <a class="cite" data-ref="ref-Gor26">[Gor26]</a>).</p>
+</div>
+
+<p>To justify this we define <em>modes</em> of data, understanding the structure of the data.</p>
+
+<div class="callout ahead" data-kind="ahead"><div class="head"><span class="kind">Looking ahead</span><span class="ttl">where this is going; repeated from <a class="ref" data-ref="sec:back-to-practice"></a></span></div>
+<p>$X=\mathbf C\mathbf P$. $\mathbf C$ can be thought of as couplings between probes and modes, i.e. how much does the probe $q^d$ activate the various modes. $\mathbf P$ is the susceptibilities to the modes.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec:modes">Modes</h2>
+<p>The framework of modes is from <a class="cite" data-ref="ref-CM25">[CM25]</a>; the presentation here follows <a class="cite" data-ref="ref-Gor26">[Gor26, Appendix B]</a>. In this section $\alpha,\beta$ index modes; this $\beta$ is not the inverse temperature (<a class="ref" data-ref="rem:notation"></a>).</p>
+
+<h3 id="sec:hilbert">Hilbert space of maps from contexts of length $k$ to $\R^\Sigma$</h3>
+<p>Fix a finite alphabet $\Sigma$ and consider the Hilbert space</p>
+<div class="eq" id="eq:H">$$\Hil=L^2\big(\Sigma^k,q;\R^\Sigma\big)$$</div>
+<p>of functions from contexts $x\in\Sigma^k$ (a context of length $k$) to vectors on $\Sigma$ (i.e. $\R^\Sigma$), with inner product</p>
+<div class="eq" id="eq:H-inner">$$\langle f,g\rangle_\Hil=\int\langle f(x),g(x)\rangle\,q(x)\dd x=\E_{x\sim q(x)}\big[\langle f(x),g(x)\rangle\big].$$</div>
+<p>Here $\langle f(x),g(x)\rangle$ is the dot product in $\R^\Sigma$, and it is averaged, weighted by how often a context $x$ occurs.</p>
+<p>The conditional $q(y|x)$ is an element of $\Hil$ defined as follows:</p>
+<div class="eq" id="eq:C">$$\Cc:\Sigma^k\longrightarrow\R^\Sigma,\qquad x\longmapsto\sum_{y\in\Sigma}q(y|x)\cdot y .$$</div>
+<p>The canonical basis for $\Hil$ is just $\langle E_{yx}\rangle_{y\in\Sigma,\,x\in\Sigma^k}$, where $E_{yx}$ is a $|\Sigma|\times|\Sigma^k|$ (tokens $\times$ contexts) matrix with a $1$ at row $y$, column $x$ and $0$ elsewhere. We want to rescale to make it orthonormal, since</p>
+<div class="eq" id="eq:E-norm">$$\|E_{yx}\|^2_\Hil=\int\underbrace{\langle E_{yx}(x'),E_{yx}(x')\rangle}_{\substack{\text{standard inner product,}\\ =1\text{ at }x'=x\text{ by definition of }E_{yx}}}q(x')\dd x'=q(x).$$</div>
+<p>So rescale by $q(x)^{-1/2}$ to make the orthonormal basis $\big\langle q(x)^{-1/2}E_{yx}\big\rangle_{y\in\Sigma,\,x\in\Sigma^k}$.</p>
+
+<div class="callout int" id="int:whitening" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">why the $q(x)^{-1/2}$</span></div>
+<p>Weight contexts inversely to their frequency (as determined by $q$) so that any analysis captures actual structure rather than just frequencies.</p>
+</div>
+
+<h3 id="sec:token-basis">Inner product on $\R^{\Sigma^k}$ and the token basis</h3>
+<p>We can express the above as follows. Denote by $V=\R^{\Sigma^k}$ the free vector space generated by contexts $x\in\Sigma^k$. Define</p>
+<div class="eq" id="eq:V-inner">$$\langle x,x'\rangle_V=q(x)^{-1}\delta_{x,x'} .$$</div>
+<p>(Again: weight contexts inversely to their frequency, as determined by $q$, so that any analysis captures actual structure rather than just frequencies; <a class="ref" data-ref="int:whitening"></a>.)</p>
+<p>Now let $\langle-,-\rangle$ be the standard inner product on $\R^\Sigma$, and define for $x\in\Sigma^k$</p>
+<div class="eq nonum">$$\xh:\R^{\Sigma^k}=V\longrightarrow\R,\qquad x'\longmapsto\langle x',x\rangle_V .$$</div>
+<p>Define $y\circ\xh:\Sigma^k\to\R^\Sigma$, an element of $\Hil$, by</p>
+<div class="eq" id="eq:yx">$$\begin{aligned}
+x'\longmapsto y\cdot\xh(x')=y\cdot\langle x',x\rangle_V&=y\cdot q(x)^{-1}\delta_{x,x'}
+=y\cdot\begin{cases}q(x)^{-1}&amp;x'=x\\0&amp;\text{else}\end{cases}\\
+&=q(x)^{-1}E_{yx} .
+\end{aligned}$$</div>
+<p>The orthonormal basis we had earlier was $q^{-1/2}E_{yx}$, so to match we have that</p>
+<div class="eq" id="eq:token-basis">$$\big\langle q(x)^{1/2}\,y\circ\xh\big\rangle_{x\in\Sigma^k,\,y\in\Sigma}$$</div>
+<p>is the same basis as $\langle q^{-1/2}E_{yx}\rangle$. We call this the <strong>token basis</strong> of $\Hil$.</p>
+<p>But this token basis is hard to find structure in.</p>
+
+<h3 id="sec:mode-basis">The mode basis</h3>
+<p>We want to actually find patterns in the data (i.e. $q\in\Hil$) and express $\Hil$ in that basis. So we SVD the matrix $\Cc\in\Hil$. Observe that, from the discussion above, $\Cc:\R^{\Sigma^k}\to\R^\Sigma$ is expressed in the token basis. Applying SVD we get</p>
+<div class="eq" id="eq:svd">$$\Cc=USV^\top=\sum_{\alpha\in\Lp}\tilde s_\alpha\,u_\alpha\circ\vh_\alpha .$$</div>
+<ul>
+<li>$U$: the left singular vectors $u_\alpha$, the continuation patterns. Write the pattern $\alpha$ as tokens.</li>
+<li>$S$: how strong is $\alpha$. $\tilde s_\alpha$: how common is $\alpha$ in $q$.</li>
+<li>$V^\top$: the right singular vectors $v_\alpha$, the context patterns. Write $\hat x\in\Sigma^k$ as a sum of common patterns.</li>
+<li>In the sum, $u_\alpha$ is the continuation pattern $\alpha$ and $\vh_\alpha$ is the context pattern $\alpha$.</li>
+</ul>
+<p>Index the right singular vectors by $\Lambda$ and the left singular vectors by $\Lp$. Extend $\Lp$ to a basis of $\R^\Sigma$, and call the orthonormal basis constructed $\Lpp\supseteq\Lp$. Note that the $u_\alpha$, $\alpha\in\Lp$, span $\mathrm{range}(\Cc)\subset\R^\Sigma$, so $\Lp$ are the continuation patterns that are predictable from contexts, but $\R^\Sigma$ contains all token directions, and many might not be a continuation of any context actually encountered in $q$.</p>
+<div class="callout rem" id="rem:kernel" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">$\Lambda$ versus $\Lp$: the mirror reading</span></div>
+<p>There is an asymmetry here. On the context side nothing has to be extended: $\Lambda$ indexes <em>all</em> the right singular vectors, so it already includes the kernel of $\Cc$, which arrives for free from the spectral theorem on $\Cc^{*}\Cc$. On the token side we have to extend by hand, from $\Lp$ to $\Lpp$. The two are mirror images:</p>
+<ul>
+<li>the kernel ($\alpha\in\Lambda$ with $\tilde s_\alpha=0$): contexts that behave identically;</li>
+<li>the extension ($\beta\in\Lpp\setminus\Lp$): tokens the data never distinguishes.</li>
+</ul>
+<p>Both are where we expect $\chi_{\alpha\beta}\approx0$.</p>
+</div>
+
+<p>Define a basis $\{e_{\alpha\beta}\}_{\alpha\in\Lambda,\,\beta\in\Lpp}$ of $\Hil$ as follows:</p>
+<div class="eq" id="eq:mode-basis">$$e_{\alpha\beta}(x)(y)=\vh_\alpha(x)\,\langle u_\beta,y\rangle,\qquad\text{where }\vh_\alpha(x)=\langle v_\alpha,x\rangle_V .$$</div>
+<p>This is called the <strong>modes basis</strong>.</p>
+
+<div class="callout int" id="int:modes-basis" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">what the modes basis is</span></div>
+<p>The SVD of $\Cc$ extracts the “structure” of the data distribution $q$, and the modes basis expresses stuff in terms of this structure.</p>
+</div>
+
+<h3 id="sec:propensities">Propensities</h3>
+<p>Propensities are the change of basis coefficients between the token and modes basis.</p>
+
+<div class="callout def" id="def:propensity" data-kind="def"><div class="head"><span class="kind">Definition</span><span class="ttl">Propensities</span></div>
+<p>The propensity is</p>
+<div class="eq" id="eq:propensity">$$s_{\alpha\beta}(xy):=\big\langle\underbrace{y\circ\xh}_{\text{token basis}},\ \underbrace{e_{\alpha\beta}}_{\text{mode basis}}\big\rangle_\Hil=e_{\alpha\beta}(x)(y).$$</div>
+</div>
+
+<details class="callout der" id="der:propensity" data-kind="der"><summary><span class="kind">Derivation</span><span class="ttl">$\langle y\circ\xh,e_{\alpha\beta}\rangle_\Hil=e_{\alpha\beta}(x)(y)$</span><span class="hint">expand</span></summary><div class="body">
+<div class="eq nonum">$$\begin{aligned}
+\langle y\circ\xh,\ e_{\alpha\beta}\rangle_\Hil&=\langle y\circ\xh,\ u_\beta\circ\vh_\alpha\rangle_\Hil\\
+&=\sum_{x'}q(x')\,\big\langle q(x)^{-1}\,y\,\delta_{xx'},\ \vh_\alpha(x')\,u_\beta\big\rangle\\
+&=\sum_{x'}\underbrace{q(x')\,q(x)^{-1}}_{=1\text{ at }x'=x}\delta_{xx'}\,\vh_\alpha(x')\,\langle y,u_\beta\rangle
+\\ &\qquad(\delta_{xx'}\text{ kills all but }x'=x)\\
+&=\vh_\alpha(x)\,u^{*}_\beta(y)=e_{\alpha\beta}(x)(y),
+\end{aligned}$$</div>
+<p>where $u^{*}_\beta(y)=\langle u_\beta,y\rangle$.</p>
+</div></details>
+
+<p>This gives</p>
+<div class="eq" id="eq:expansion">$$y\circ\xh=\sum_{\alpha\in\Lambda,\ \beta\in\Lpp}s_{\alpha\beta}(xy)\,e_{\alpha\beta} .$$</div>
+
+<div class="callout int" id="int:excites" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">$(x,y)$ excites mode $\alpha$</span></div>
+<p>Given a context $x$ and a continuation $y$, we say $(x,y)$ <em>excites</em> mode $\alpha$ if, when we write in the modes basis</p>
+<div class="eq nonum">$$y\circ\xh=\sum s_{\alpha\beta}(xy)\,e_{\alpha\beta},$$</div>
+<p>the diagonal term $s_{\alpha\alpha}(xy)$ dominates. This says that:</p>
+<p><span class="circ">1</span>the context $x$ is an $\alpha$ pattern;</p>
+<p><span class="circ">2</span>$y$ is a continuation the $\alpha$ pattern predicts.</p>
+<p>If $x$ looks like an $\alpha$ pattern but $y$ is not a continuation consistent with $\alpha$, we get the off diagonal term $s_{\alpha\beta}(xy)$ being large.</p>
+<p>Note none of this is a statement about the model, this is purely a statement about structure in the data distribution. Susceptibilities connect this structure in data to structure in the model.</p>
+</div>
+
+<h3 id="sec:chi-modes">Susceptibilities in the modes basis</h3>
+<p>We can express the excess loss used in the per-token susceptibilities (<a class="ref" data-ref="def:per-token"></a>) in terms of the modes basis.</p>
+
+<div class="callout lem" id="lem:excess-loss" data-kind="lem"><div class="head"><span class="kind">Lemma</span><span class="ttl">excess loss in the modes basis</span></div>
+<p><a class="cite" data-ref="ref-Gor26">[Gor26, Lemma B.2]</a></p>
+<div class="eq" id="eq:excess-loss">$$\ell_{xy}(w)-L(w)=\sum_{\alpha,\beta}\underbrace{\big[s_{\alpha\beta}(xy)-\delta_{\alpha\beta}\,\tilde s_\alpha\big]}_{\text{purely data dependent}}\ \underbrace{\Phi_{\alpha\beta}(w)}_{\text{model's loss on }e_{\alpha\beta}}$$</div>
+<p>where</p>
+<div class="eq nonum">$$\Phi(w)(x)=\sum_y\ell_{xy}(w)\,y,\qquad\Phi_{\alpha\beta}(w)=\langle\Phi(w),e_{\alpha\beta}\rangle_\Hil .$$</div>
+</div>
+
+<div class="callout int" data-kind="int"><div class="head"><span class="kind">Intuition</span></div>
+<p>This is literally applying the change of basis from the token basis to the modes basis to $\Delta L=L'(w)-L(w)$ (<a class="ref" data-ref="lem:mixture"></a>), where in this case $L'(w)=\ell_{xy}(w)$ was a single sample (<a class="ref" data-ref="int:point-mass"></a>).</p>
+</div>
+
+<p>Taking the covariance with the observables $\phi_C$ gives us $\chi_{xy}$ in the modes basis.</p>
+
+<div class="callout lem" id="lem:chi-modes" data-kind="lem"><div class="head"><span class="kind">Lemma</span><span class="ttl">per-token susceptibility in the modes basis</span></div>
+<p><a class="cite" data-ref="ref-Gor26">[Gor26, Lemma B.3]</a> We can write the per-token susceptibility of <a class="ref" data-ref="def:per-token"></a> as</p>
+<div class="eq" id="eq:chi-modes">$$\chi_{xy}=\sum_{\alpha,\beta}s_{\alpha\beta}(xy)\,\chi_{\alpha\beta}-\bar\chi,$$</div>
+<p>where $\chi_{\alpha\beta}\in\R^H$, with entries</p>
+<div class="eq nonum">$$\chi^C_{\alpha\beta}=-\Cov\big[\phi_C,\Phi_{\alpha\beta}\big],$$</div>
+<p>is the susceptibility of component $C$ to the mode pair $(\alpha,\beta)$ (context $\alpha$, continuation $\beta$). And</p>
+<div class="eq" id="eq:chi-bar">$$\bar\chi=\sum_\alpha\tilde s_\alpha\,\chi_{\alpha\alpha}$$</div>
+<p>is a recentering term for stuff that does not depend on $x,y$.</p>
+</div>
+
+<div class="callout rem" id="rem:sparse" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">when the decomposition is useful</span></div>
+<p>The decomposition above is useful when, for a given sample $(x,y)$, the propensity profile (the decomposition into modes, i.e. what modes does $(x,y)$ activate) is sparse, which requires:</p>
+<p><span class="circ">1</span>$x$ aligns with only a few patterns $v_\alpha$, so the context $x$ is clearly explained (if there were many $v_\alpha$'s that aligned with $x$, it's ambiguous as to what pattern (if any) explains $x$);</p>
+<p><span class="circ">2</span>$y$ aligns with a few continuation patterns $u_\beta$, so the continuation is unambiguously described by pattern $\beta$;</p>
+<p><span class="circ">3</span>the diagonal term dominates, i.e. $s_{\alpha\alpha}(xy)\gg s_{\gamma\delta}(xy)$ off the diagonal: $y$ following $x$ is explained by pattern $\alpha$. This is the same intuition as <a class="ref" data-ref="int:excites"></a>.</p>
+</div>
+
+<p>If we had an oracle and got access to $q(y|x)$, we could SVD $\Cc$, get the propensities $s_{\alpha\beta}(xy)$, and invert <a class="ref" data-ref="lem:chi-modes"></a>:</p>
+<div class="eq" id="eq:invert">$$\underbrace{\chi_{\alpha\beta}-|\Sigma|\,\bar\chi}_{\substack{\text{susceptibility to the}\\\text{pure mode pair }(\alpha,\beta)}}=\underbrace{\int s_{\alpha\beta}(xy)\,q(x)\,\chi_{xy}\dd x\dd y}_{\substack{\text{integrate per-token susceptibilities,}\\\text{weighting by propensities}}} .$$</div>
+
+<h3 id="sec:back-to-practice">Going back to practice</h3>
+<p>Before this excursion, we had the response matrix (<a class="ref" data-ref="def:response-matrix"></a>)</p>
+<div class="eq nonum">$$X=\big(\hat\chi^d_j\big)_{d\in D,\,j\in H},$$</div>
+<p>and we wanted to justify looking at the PCA / SVD of $X$. But <a class="ref" data-ref="lem:chi-modes"></a> lets us rewrite</p>
+<div class="eq" id="eq:chi-dj">$$\chi^d_j=\sum_{\alpha\in\Lambda,\ \beta\in\Lpp}c^{\,d,\alpha\beta}\,\chi_{\alpha\beta,j} .$$</div>
+<ul>
+<li>The index $d$: this is the $q^d$ perturbation (the lemma was for the per-token susceptibility; here it's the susceptibility to a perturbation $q^d$).</li>
+<li>The index $j$: only the component $C_j$ weights. In the lemma above, $\chi_{xy}$ for all $j\in H$ was a vector in $\R^H$.</li>
+</ul>
+<p>This gives</p>
+<div class="eq boxed" id="eq:X-CP">$$\boxed{\;X=\mathbf C\,\mathbf P\;}$$</div>
+<p>where $\mathbf C$ is a $|D|\times|\Lambda||\Lpp|$ matrix with entries $c^{\,d,\alpha\beta}$, and $\mathbf P$ is a $|\Lambda||\Lpp|\times|H|$ matrix with entries $\chi_{\alpha\beta,j}$ <a class="cite" data-ref="ref-Bak25">[Bak25, Appendix D.5]</a>.</p>
+
+<div class="callout int" id="int:X-CP" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">reading $X=\mathbf C\mathbf P$</span></div>
+<p>The coefficients of $\mathbf C$ are the propensities, with the centering already inside: $c^{\,d,\alpha\beta}$ comes from the mode decomposition of $\Cc^{d}-\Cc$, the conditional for $q^d$ minus the one for $q$ <a class="cite" data-ref="ref-Bak25">[Bak25, Definition D.2]</a>, and for a single token that is exactly the $s_{\alpha\beta}(xy)-\delta_{\alpha\beta}\tilde s_\alpha$ of <a class="ref" data-ref="lem:excess-loss"></a>. So $\mathbf C$ can be thought of as couplings between probes and modes, i.e. how much does the probe $q^d$ activate the various modes. $\mathbf P$ is the susceptibilities to the modes.</p>
+<ul>
+<li>$\mathbf C$: token basis to modes basis.</li>
+<li>$\mathbf P$: response of the model to modes.</li>
+</ul>
+<p>There are two different centerings around, and it is worth separating them:</p>
+<div class="tblwrap"><table>
+<thead><tr><th>Centering</th><th>What it removes</th></tr></thead>
+<tbody>
+<tr><td style="white-space:normal">$-\delta_{\alpha\beta}\tilde s_\alpha$ in $\mathbf C$</td><td>the data's own expansion; makes the rows average to zero over $q$; gives $\bar\chi$</td></tr>
+<tr><td style="white-space:normal">column standardization before PCA (the one done later in the first paper)</td><td>the per-head constant $\Cov(\phi_C,L)=\mathrm{Var}(E)=-\bar\chi^{C}$ (<a class="ref" data-ref="rem:slope"></a>), and the per-head scale</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec:empirical">Empirical Results</h2>
+
+<h3 id="sec:small-lm">Small language models (Baker et al. 2025)</h3>
+<p>They <a class="cite" data-ref="ref-Bak25">[Bak25]</a> look at a small 3M-parameter transformer trained on the Pile. The GPT-2 tokenizer is truncated to get $|\Sigma|=5000$. Each layer $l\in\{0,1\}$ has 8 attention heads that are taken as components. They take 20,000 samples from each of the 13 Pile subsets, 260,000 in total. Computing per-token susceptibilities on this gets</p>
+<div class="eq" id="eq:X-baker">$$X^l\in\R^{260000\times 8},\qquad X_{ij}=\hat\chi^{C_j}_{(x_i,y_i)} .$$</div>
+<p>Now do PCA on $X^l$. Then the principal components are identified with patterns in the data (the $\mathbf C$ factor in $X=\mathbf C\mathbf P$, <a class="ref" data-ref="eq:X-CP"></a>), while the loadings (right singular vectors) are identified with structure in the model. Build a bridge between structure in data and structure in models.</p>
+
+<figure id="fig:baker-data" data-kind="fig">
+<div class="figbody paperfig"><img src="figures/baker-fig2-data-loadings.png" alt="Heatmaps, one per pattern (word start, word part, word end, induction, spacing, right delimiter), giving the percentage of the top 1% and 10% most positive and negative tokens in PC1 to PC3 of each layer that follow the pattern. Highlighted: induction, top 1% negative, PC2: 77.7 (layer 0) and 65.7 (layer 1); word end, top 1% positive, PC2: 54.3 (layer 0) and 75.8 (layer 1)." loading="lazy"></div>
+<figcaption>Taken from <a class="cite" data-ref="ref-Bak25">[Bak25]</a> (their Figure 2, CC BY 4.0; the purple boxes are mine). They categorize each sample $(x,y)$ as one of the 6 patterns. For each pattern, look at where the tokens belonging to the pattern are ranked in that PC: each cell is the percentage of the top 1% / 10% most positive / negative tokens in that PC that follow the pattern.</figcaption>
+</figure>
+
+<figure id="fig:baker-loadings" data-kind="fig">
+<div class="figbody paperfig"><img src="figures/baker-fig3-component-loadings.png" alt="Bar charts of the loadings of PC1, PC2 and PC3 over the 16 attention heads. PC1 is uniform. In PC2 the heads l0h1, l0h4, l0h5, l1h6 and l1h7 are positive and the rest are negative." loading="lazy"></div>
+<figcaption>Taken from <a class="cite" data-ref="ref-Bak25">[Bak25]</a> (their Figure 3, CC BY 4.0). Loadings (right singular vectors): the model's responses to the various patterns.</figcaption>
+</figure>
+
+<p><strong>PC1.</strong> Uniform response across all heads (loadings).</p>
+<p><strong>PC2.</strong> On the data side (principal components, <a class="ref" data-ref="fig:baker-data"></a>), 77% of the $(x,y)$ tokens that are most strongly negative (top 1%, layer 0) are ascribed to induction, while a similar portion of the most strongly positive samples are word ends.</p>
+<p>On the model side (loadings, <a class="ref" data-ref="fig:baker-loadings"></a>), <span class="mono">l0h1</span>, <span class="mono">l0h4</span>, <span class="mono">l0h5</span>, <span class="mono">l1h6</span>, <span class="mono">l1h7</span> are positive while the others are negative. Therefore</p>
+<div class="eq nonum">$$\begin{gathered}X_{ij}=\hat\chi^{C_j}_{x_iy_i}&lt;0\\ \text{for }C_j\in\{\texttt{l0h1},\texttt{l0h4},\texttt{l0h5},\texttt{l1h6},\texttt{l1h7}\},\ (x_i,y_i)\in\text{induction patterns}.\end{gathered}$$</div>
+<p>Now $\hat\chi^{C_j}_{x_iy_i}&lt;0$ since the principal components corresponding to $(x_i,y_i)$ are $\ll0$ while the $C_j$ loadings are $&gt;0$. So $\{\texttt{l0h1},\texttt{l0h4},\texttt{l0h5},\texttt{l1h6},\texttt{l1h7}\}$ <em>express</em> induction patterns (in the sense of <a class="ref" data-ref="sec:expression"></a>): they are responsible for the induction circuit.</p>
+<p>In contrast,</p>
+<div class="eq nonum">$$X_{ij}=\hat\chi^{C_j}_{x_iy_i}&gt;0\qquad\text{for }C_j\in\text{induction circuit},\ (x_i,y_i)\in\text{word end patterns},$$</div>
+<p>so the induction heads <em>suppress</em> word endings (and with the signs flipped, the non-induction heads express them).</p>
+
+<div class="callout warn" id="caut:raw" data-kind="warn"><div class="head"><span class="kind">Caution</span><span class="ttl">sign analysis is not enough</span></div>
+<p>To make any rigorous circuit claims, the actual raw distributions of the susceptibilities are required, not just a sign analysis. Remember expression / suppression is all relative; in raw numbers $\hat\chi_{ij}&gt;0$ even for induction $C_j$, it is just way way smaller compared to the other heads (somehow least suppressive $\approx$ most expressive).</p>
+</div>
+
+<h3 id="sec:spectroscopy">Towards spectroscopy (2026)</h3>
+<p>Here <a class="cite" data-ref="ref-Gor26">[Gor26]</a> they examine Pythia-14M. They build $X$ using 780,000 $(x,y)$ samples and the $\phi_C$ observables for 32 attention heads:</p>
+<div class="eq" id="eq:X-spec">$$X_{ij}=\hat\chi^{C_j}_{(x_i,y_i)},\qquad X\in\R^{780000\times32}.$$</div>
+<p>They now cluster rows of $X$ instead of PCA (like in the predecessor). My guess is that this is likely because an SVD of $X$ would recover at most 32 modes in the data, and it seems likely that at the scale of Pythia-14M, models have way more interesting modes.</p>
+
+<div class="callout int" id="int:clustering" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">why does clustering rows of $X$ make sense?</span></div>
+<p>Recall the modes basis (purely derived from the data) tells us how $xy$ and $x'y'$ are related, by looking at the modes they activate. Let</p>
+<div class="eq nonum">$$s(xy):=\big(s_{\alpha\beta}(xy)\big)_{\alpha,\beta}$$</div>
+<p>be the propensity (expressing $xy$ in the modes basis). This is an injective map:</p>
+<div class="eq nonum">$$s(xy)=s(x'y')\ \Longrightarrow\ xy=x'y'.$$</div>
+<p>But we may have $s(xy)\approx s(x'y')$ even if $xy\ne x'y'$, if $x$ and $x'$ share similar context patterns and $y$ follows $x$ for the same reason as $y'$ follows $x'$. By the decomposition we saw in <a class="ref" data-ref="lem:chi-modes"></a>,</p>
+<div class="eq nonum">$$\chi_{xy}=\sum_{\alpha,\beta}s_{\alpha\beta}(xy)\,\chi_{\alpha\beta}-\bar\chi .$$</div>
+<p>So if $xy$ is similar to $x'y'$ in the sense that their propensity profiles are similar, we have</p>
+<div class="eq nonum">$$\chi_{xy}\approx\chi_{x'y'} .$$</div>
+<p>Similar $xy$, $x'y'$ elicit similar first order responses.</p>
+<p>Conversely, if the model has not learned a particular mode $\gamma$ (i.e. $\chi_{\gamma\gamma}\approx0$, so no response to $\gamma$) and the distinction between $xy$ and $x'y'$ lies in mode $\gamma$ (the propensity profile only differs here), the model cannot distinguish them and $\chi_{xy}\approx\chi_{x'y'}$ despite their patterns being distinct.</p>
+</div>
+
+<p><strong>Clusters.</strong> If $\chi_{xy}\in\R^{32}$ and $\chi_{x'y'}\in\R^{32}$ are assigned to the same cluster, then likely:</p>
+<p><span class="circ">1</span><strong>Data side.</strong> $s_{\alpha\alpha}(xy)$ and $s_{\alpha\alpha}(x'y')\gg0$. They share a propensity: they activate the same mode.</p>
+<p><span class="circ">2</span><strong>Model side.</strong> The model has learned this mode, i.e. $\|\chi_{\alpha\alpha}\|\gg0$.</p>
+
+<p><strong>Empirical findings.</strong> Refer to the paper <a class="cite" data-ref="ref-Gor26">[Gor26]</a> for details on the clustering.</p>
+<p><span class="circ">1</span><strong>Context sensitivity.</strong> The same token $y$ is in multiple clusters, depending on the continuation pattern that is most appropriate.</p>
+<div class="callout ex" data-kind="ex"><div class="head"><span class="kind">Example</span><span class="ttl"><span class="mono">*</span></span></div>
+<p><span class="mono">"*"</span> is in C15 and C57, where the context is multiplication (the modes activated, $\alpha$, are to do with math). <span class="mono">"*"</span> is also in C504, where the context is markdown formatting (modes $\gamma$ to do with formatting).</p>
+</div>
+<p><span class="circ">2</span><strong>Functional grouping.</strong> $y,y'$ distinct but in the same cluster: $y$ follows $x$ and $y'$ follows $x'$ for the same reason.</p>
+<div class="callout ex" data-kind="ex"><div class="head"><span class="kind">Example</span></div>
+<p>$\{\texttt h,\texttt u,\texttt y,\texttt o\}$ are all in the same cluster when they follow a multiplication operator.</p>
+</div>
+<p>The paper finds other patterns of interest.</p>
+
+<div class="callout rem" id="rem:sae" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">comparison with SAE features</span></div>
+<p>A given token $x$ often activates multiple SAE features. But a pair $(x,y)$ <u>only</u> belongs to one susceptibility cluster.</p>
+<p><strong>Limitation</strong>, since a single sample $(x,y)$ likely activates a bunch of modes (similar patterns) and this is thrown away.</p>
+</div>
+
+<p class="next">Back to <a href="../slt-notes/">Part 1: Singular Learning Theory: Basics</a>.</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:references">References</h2>
+<ol class="refs">
+<li id="ref-Wat13" class="ref-target"><span class="key">[Wat13]</span><span>S. Watanabe. A widely applicable Bayesian information criterion. <em>Journal of Machine Learning Research</em> 14 (2013), 867–897. <a href="https://www.jmlr.org/papers/volume14/watanabe13a/watanabe13a.pdf">jmlr.org</a> <span class="note">Theorem 2: the free energy formula $F=nL_n(w_0)+\lambda\log n-(m-1)\log\log n+R_n$. WBIC: $\E^\beta_w[nL_n(w)]$ at $\beta=1/\log n$ approximates the free energy, which is the argument of Sections 2.3 and 2.4.</span></span></li>
+<li id="ref-LLC23" class="ref-target"><span class="key">[LLC23]</span><span>E. Lau, Z. Furman, G. Wang, D. Murfet, S. Wei. The Local Learning Coefficient: A Singularity-Aware Complexity Measure. <a href="https://arxiv.org/abs/2308.12108">arXiv:2308.12108</a>, 2023. <span class="note">The local free energy; the estimator $\hat\lambda(\ws)=n\beta\big[\E^\beta_{w|\ws,\gamma}L_n(w)-L_n(\ws)\big]$ with $\beta=1/\log n$, the Gaussian localization $\gamma$, and SGLD sampling.</span></span></li>
+<li id="ref-Bak25" class="ref-target"><span class="key">[Bak25]</span><span>G. Baker, G. Wang, J. Hoogland, D. Murfet. Structural Inference: Interpreting Small Language Models with Susceptibilities. <a href="https://arxiv.org/abs/2504.18274">arXiv:2504.18274</a>, 2025 (ICLR 2026). <span class="note">Susceptibilities, Lemmas 2.2 and 2.3, the observable $\phi_C$, per-token susceptibilities, expression and suppression, the response matrix and $X=CP$, the 3M-parameter experiments.</span></span></li>
+<li id="ref-Gor26" class="ref-target"><span class="key">[Gor26]</span><span>A. Gordon, G. Baker, G. Wang, W. Snell, S. van Wingerden, D. Murfet. Towards Spectroscopy: Susceptibility Clusters in Language Models. <a href="https://arxiv.org/abs/2601.12703">arXiv:2601.12703</a>, 2026. <span class="note">Token and modes bases, propensities, Lemmas B.2 and B.3, the inversion formula, clustering on Pythia-14M, comparison with SAE features.</span></span></li>
+<li id="ref-CM25" class="ref-target"><span class="key">[CM25]</span><span>Z. Chen, D. Murfet. Modes of Sequence Models and Learning Coefficients. <a href="https://arxiv.org/abs/2504.18048">arXiv:2504.18048</a>, 2025. <span class="note">The framework of modes: SVD of the conditional distribution with the $q(x)^{-1}$ inner product.</span></span></li>
+</ol>
+</main>
+</div>
+
+<!-- previews for links into Part 1 (../slt-notes/); kept off-screen so MathJax typesets them -->
+<div class="p1previews" aria-hidden="true">
+  <div id="p1-eq1" data-label="Part 1 · Equation (1)"><div class="eq nonum">$$-\frac1n L_n(w) = K_n(w) + S_n$$</div><p>(in Part 1's notation, where $L_n(w)=\sum_{i=1}^n\log p(x_i|w)$)</p></div>
+  <div id="p1-eq30" data-label="Part 1 · Section 7.2 · Equation (30)"><div class="eq nonum">$$\Fn(U)=n\hat K_n(U)+\lambda_U\log n+O(\log\log n)$$</div><p>The first term measures how well you fit the data, something like a measure of accuracy on the training data. Low $\lambda_U$ means more posterior volume near the optimum (more degenerate or flat directions).</p></div>
+  <div id="p1-eq28" data-label="Part 1 · Definition (RLCT) · Equation (28)"><div class="eq nonum">$$\mathrm{Vol}(\eps)=\int_{K(w)&lt;\eps}\varphi(w)\dd w\ \propto\ \eps^{\lambda}\Big(\log\frac1\eps\Big)^{m-1}$$</div><p>$\lambda$ is the real log canonical threshold and $m$ its multiplicity.</p></div>
+  <div id="p1-phase" data-label="Part 1 · Section 7.3 · Phase transitions"><p>One of the payoffs of building this machinery is that it may offer an explanation for phenomena we see in deep learning, like phase transitions (which are not explained by regular models).</p></div>
+  <div id="p1-setup" data-label="Part 1 · Section 2 · The Learning Problem"><p>A learning problem is a triple $(p,q,\varphi)$: $p$ a model, a distribution on $\X$ for each parameter setting; $q$ what we want to learn; $\varphi$ a prior, our best guess as to which $w\in W$ gives us the lowest loss.</p></div>
+  <div id="p1-fig2" data-label="Part 1 · Figure 2"><p>The contour $K(w)=\eps$ near $\ws$ is an ellipsoid whose semi-axes have lengths $\sqrt{2\eps/\kappa_j}$. The large eigenvalue $\kappa_1$ gives a short axis; the small eigenvalue $\kappa_2$ gives a long, flat direction.</p></div>
+</div>
+<button id="backbtn" type="button">↩ back to where you were</button>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------------- numbering & cross references ---------------- */
+function number(){
+  // sections
+  let h2=0,h3=0; const toc=$('#toclist');
+  $$('main h2, main h3').forEach(h=>{
+    if(h.tagName==='H2'){h2++;h3=0;h.dataset.label=String(h2);}else{h3++;h.dataset.label=h2+'.'+h3;}
+    h.dataset.kind='sec';
+    const title=h.textContent.trim();
+    if(!h.querySelector('.num')){const s=document.createElement('span');s.className='num';s.textContent=h.dataset.label;h.prepend(s);}
+    if(!h.id){h.id='sec-'+h.dataset.label.replace('.','-');}
+    const li=document.createElement('li');li.className=h.tagName==='H2'?'l2':'l3';
+    const a=document.createElement('a');a.href='#'+h.id;a.textContent=title;a.dataset.target=h.id;li.appendChild(a);toc.appendChild(li);
+  });
+  // equations (numbered unless .nonum)
+  let n=0;
+  $$('main .eq').forEach(e=>{
+    if(e.classList.contains('nonum')||e.closest('.popover'))return;
+    n++;e.dataset.label='('+n+')';e.dataset.kind='eq';
+    if(!e.id)e.id='eq-'+n;
+    const a=document.createElement('a');a.className='eqno';a.href='#'+e.id;a.textContent='('+n+')';a.title='Link to this equation';e.appendChild(a);
+  });
+  // figures, tables, examples, definitions
+  const counters={};
+  const prefix={fig:'Figure',tab:'Table',ex:'Example',def:'Definition',rem:'Remark',der:'Derivation',lem:'Lemma',int:'Intuition',ahead:'Looking ahead',warn:'Caution'};
+  $$('main [data-kind]').forEach(el=>{
+    const k=el.dataset.kind; if(k==='sec'||k==='eq')return;
+    counters[k]=(counters[k]||0)+1; el.dataset.label=prefix[k]+' '+counters[k];
+    if(k==='fig'){const c=el.querySelector('figcaption');if(c){const s=document.createElement('span');s.className='figno';s.textContent='Figure '+counters[k];c.prepend(s);}}
+    if(k==='tab'){const s=el.querySelector('.tabno');if(s)s.textContent='Table '+counters[k]+' · ';}
+    if(k==='ex'){const t=el.querySelector('.kind');if(t)t.textContent='Example '+counters[k];}
+    if(k==='def'){const t=el.querySelector('.kind');if(t)t.textContent='Definition '+counters[k];}
+    if(k==='lem'){const t=el.querySelector('.kind');if(t)t.textContent='Lemma '+counters[k];}
+  });
+  // fill refs
+  $$('a.ref, a.cite').forEach(a=>{
+    const id=a.dataset.ref; const t=document.getElementById(id); if(!t){a.textContent=a.textContent||'??';return;}
+    a.href='#'+id;
+    if(!a.textContent.trim()){
+      const k=t.dataset.kind, lab=t.dataset.label||'';
+      a.textContent=k==='eq'?lab:k==='sec'?'Section '+lab:lab;
+    }
+  });
+}
+
+/* ---------------- hover previews ---------------- */
+let pop=null, popTimer=null;
+function showPop(a){
+  const t=document.getElementById(a.dataset.ref); if(!t)return;
+  hidePop();
+  pop=document.createElement('div');pop.className='popover';
+  const lab=document.createElement('div');lab.className='pop-label';
+  const k=t.dataset.kind;
+  lab.textContent=k==='eq'?'Equation '+t.dataset.label:k==='sec'?'Section '+t.dataset.label:(t.dataset.label||'Reference');
+  pop.appendChild(lab);
+  let clone;
+  if(k==='sec'){
+    // section: heading + first paragraph
+    clone=document.createElement('div');const h=t.cloneNode(true);h.querySelectorAll('.num').forEach(x=>x.remove());h.style.margin='0';h.style.border='0';h.style.padding='0';h.style.fontSize='1.1rem';clone.appendChild(h);
+    let nx=t.nextElementSibling; while(nx&&!(nx.tagName==='P'||nx.classList.contains('callout')||nx.classList.contains('eq')))nx=nx.nextElementSibling;
+    if(nx){const c=nx.cloneNode(true);c.style.maxHeight='140px';c.style.overflow='hidden';clone.appendChild(c);}
+  }else if(k==='fig'){
+    clone=t.cloneNode(true);
+  }else{
+    clone=t.cloneNode(true);
+  }
+  clone.removeAttribute('id');clone.classList.add('p1prev');clone.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+  clone.querySelectorAll('.eqno').forEach(x=>x.remove());
+  pop.appendChild(clone);
+  document.body.appendChild(pop);
+  const r=a.getBoundingClientRect(), pw=pop.offsetWidth, ph=pop.offsetHeight;
+  let left=window.scrollX+r.left, top=window.scrollY+r.bottom+8;
+  if(left+pw>window.scrollX+window.innerWidth-12)left=window.scrollX+window.innerWidth-12-pw;
+  if(r.bottom+8+ph>window.innerHeight&&r.top-ph-8>0)top=window.scrollY+r.top-ph-8;
+  pop.style.left=left+'px';pop.style.top=top+'px';
+}
+function hidePop(){if(pop){pop.remove();pop=null;}}
+function wireRefs(){
+  $$('a.ref, a.cite, a.p1ref').forEach(a=>{
+    a.addEventListener('mouseenter',()=>{clearTimeout(popTimer);popTimer=setTimeout(()=>showPop(a),120);});
+    a.addEventListener('mouseleave',()=>{clearTimeout(popTimer);hidePop();});
+    a.addEventListener('focus',()=>showPop(a)); a.addEventListener('blur',hidePop);
+    a.addEventListener('click',()=>{hidePop();if(!a.classList.contains('p1ref'))rememberPos();});
+  });
+  window.addEventListener('scroll',()=>{if(pop)hidePop();},{passive:true});
+}
+/* flash the target on hash navigation, open details if needed */
+function flashTarget(){
+  const id=decodeURIComponent(location.hash.slice(1)); if(!id)return;
+  const t=document.getElementById(id); if(!t)return;
+  const d=t.closest('details'); if(d&&!d.open){d.open=true;}
+  t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash');
+}
+window.addEventListener('hashchange',flashTarget);
+/* back button */
+let savedY=null; const backbtn=$('#backbtn');
+function rememberPos(){savedY=window.scrollY;backbtn.classList.add('show');}
+backbtn.addEventListener('click',()=>{if(savedY!=null){window.scrollTo({top:savedY,behavior:'smooth'});}backbtn.classList.remove('show');savedY=null;history.replaceState(null,'',location.pathname+location.search);});
+
+/* ---------------- toc highlighting ---------------- */
+function wireToc(){
+  const links=$$('#toclist a'); if(!links.length||!('IntersectionObserver' in window))return;
+  const map=new Map(links.map(a=>[a.dataset.target,a]));
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(en=>{if(en.isIntersecting){links.forEach(l=>l.classList.remove('active'));const a=map.get(en.target.id);if(a)a.classList.add('active');}});
+  },{rootMargin:'-10% 0px -80% 0px'});
+  $$('main h2, main h3').forEach(h=>obs.observe(h));
+}
+/* ---------------- derivation toggle ---------------- */
+function wireDer(){
+  const ds=$$('details.callout'); let open=false;
+  const upd=()=>{['#toggle-der','#toggle-der-2'].forEach(s=>{const b=$(s);if(b)b.textContent=open?'Collapse derivations':'Expand derivations';});};
+  ['#toggle-der','#toggle-der-2'].forEach(s=>{const b=$(s);if(b)b.addEventListener('click',()=>{open=!open;ds.forEach(d=>d.open=open);upd();});});
+}
+
+/* ---------------- figure helpers ---------------- */
+const colors=()=>({red:css('--red'),blue:css('--blue'),green:css('--green'),purple:css('--purple'),amber:css('--amber'),ink:css('--ink'),ink2:css('--ink-2'),ink3:css('--ink-3'),rule:css('--rule'),paper:css('--paper'),paper2:css('--paper-2')});
+function hexToRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return [(n>>16)&255,(n>>8)&255,n&255];}
+function svgEl(tag,attrs,parent){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+function fmt(x,d=3){return Number(x).toPrecision(d);}
+function rng(seed){let a=seed>>>0;const u=()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};return ()=>{const r=Math.sqrt(-2*Math.log(u()+1e-12));return r*Math.cos(2*Math.PI*u());};}
+
+/* ---------------- Fig: SGLD, flat directions and gamma ---------------- */
+function figSgld(){
+  const cv=$('#sg-canvas'); if(!cv)return;
+  const bF=$('#sg-flat'),bB=$('#sg-basins'),gs=$('#sg-gamma'),gv=$('#sg-gamma-val'),run=$('#sg-run'),rst=$('#sg-reset'),read=$('#sg-read');
+  const ctx=cv.getContext('2d'), W=cv.width, H=cv.height, S=60; // 60 px per unit: a in [-5,5], b in [-3,3]
+  const NBETA=20, EPS=0.004, TMAX=9000, BURN=200;
+  const aLeft=(()=>{let best=-1,bv=1e9;for(let a=-1.5;a<=-0.5;a+=1e-4){const v=0.1*(a*a-1)*(a*a-1)-0.05*a;if(v<bv){bv=v;best=a;}}return best;})();
+  const lands={
+    flat:{L:(a,b)=>0.5*a*a, g:(a,b)=>[a,0], ws:[0,0], Lmax:12.5},
+    basins:{L:(a,b)=>0.1*(a*a-1)*(a*a-1)-0.05*a+0.5*b*b, g:(a,b)=>[0.4*a*(a*a-1)-0.05,b], ws:[aLeft,0], Lmax:4}
+  };
+  let which='flat', chain=[], w=[0,0], t=0, sumL=0, cnt=0, inBasin=0, gauss=rng(7), timer=null, field=null, seed=7;
+  const X=a=>W/2+a*S, Y=b=>H/2-b*S;
+  const gamma=()=>60*Math.pow(parseFloat(gs.value)/100,3);
+  function buildField(){
+    const m=lands[which], c=colors(), base=hexToRgb(c.paper2), blue=hexToRgb(c.blue);
+    const off=document.createElement('canvas');off.width=W;off.height=H;const o=off.getContext('2d');
+    const img=o.createImageData(W,H), d=img.data, L0=m.L(m.ws[0],m.ws[1]);
+    for(let j=0;j<H;j++)for(let i=0;i<W;i++){
+      const a=(i+0.5-W/2)/S,b=(H/2-j-0.5)/S; let l=Math.min(1,Math.max(0,(m.L(a,b)-L0)/m.Lmax)); l=Math.floor(Math.sqrt(l)*12)/12;
+      const k=4*(j*W+i); for(let q=0;q<3;q++)d[k+q]=base[q]+(blue[q]-base[q])*l*0.6; d[k+3]=255;
+    }
+    o.putImageData(img,0,0); field=off;
+  }
+  function step(){
+    const m=lands[which], g=gamma(), gr=m.g(w[0],w[1]), sd=Math.sqrt(2*EPS);
+    w=[w[0]-EPS*(NBETA*gr[0]+g*(w[0]-m.ws[0]))+sd*gauss(), w[1]-EPS*(NBETA*gr[1]+g*(w[1]-m.ws[1]))+sd*gauss()];
+    t++; chain.push(w);
+    if(t>BURN){sumL+=m.L(w[0],w[1])-m.L(m.ws[0],m.ws[1]);cnt++;}
+    if(w[0]<0)inBasin++;
+  }
+  function reset(pre){
+    const m=lands[which]; gauss=rng(seed); w=m.ws.slice(); chain=[w]; t=0; sumL=0; cnt=0; inBasin=0;
+    for(let i=0;i<pre;i++)step();
+  }
+  function draw(){
+    const m=lands[which], c=colors(), g=gamma();
+    if(!field)buildField();
+    ctx.drawImage(field,0,0);
+    // axes labels
+    ctx.fillStyle=c.ink2;ctx.font='11px IBM Plex Mono, monospace';ctx.fillText('a',W-14,H/2-6);ctx.fillText('b',W/2+6,12);
+    ctx.strokeStyle=c.rule;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H/2+0.5);ctx.lineTo(W,H/2+0.5);ctx.moveTo(W/2+0.5,0);ctx.lineTo(W/2+0.5,H);ctx.stroke();
+    // width of the Gaussian bump
+    if(g>0){const r=S/Math.sqrt(g);ctx.setLineDash([5,4]);ctx.strokeStyle=c.red;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(X(m.ws[0]),Y(m.ws[1]),r,0,2*Math.PI);ctx.stroke();ctx.setLineDash([]);}
+    // chain
+    ctx.strokeStyle=c.amber;ctx.lineWidth=0.9;ctx.globalAlpha=0.85;ctx.beginPath();
+    chain.forEach((p,i)=>{const x=X(p[0]),y=Y(p[1]);if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);});ctx.stroke();ctx.globalAlpha=1;
+    ctx.fillStyle=c.ink;ctx.beginPath();ctx.arc(X(w[0]),Y(w[1]),3.5,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle=c.red;ctx.beginPath();ctx.arc(X(m.ws[0]),Y(m.ws[1]),4.5,0,2*Math.PI);ctx.fill();
+    ctx.fillText('w*',X(m.ws[0])+8,Y(m.ws[1])-8);
+    ctx.strokeStyle=c.ink3;ctx.lineWidth=1;ctx.strokeRect(0.5,0.5,W-1,H-1);
+    gv.textContent=g<10?g.toFixed(2):g.toFixed(1);
+    const dist=Math.hypot(w[0]-m.ws[0],w[1]-m.ws[1]);
+    let s='γ = <b>'+(g<10?g.toFixed(2):g.toFixed(1))+'</b> · bump width 1/√γ = <b>'+(g>0?fmt(1/Math.sqrt(g),3):'∞')+'</b> · step t = <b>'+t+'</b> · distance of w<sub>t</sub> from w* = <b>'+dist.toFixed(2)+'</b>';
+    if(which==='flat')s+=' · running λ̂ = nβ·mean[L(w<sub>t</sub>) − L(w*)] = <b>'+(cnt?fmt(NBETA*sumL/cnt,2):'–')+'</b> (true λ = ½)';
+    else s+=' · fraction of steps in the basin of w*: <b>'+(t?fmt(inBasin/t,2):'–')+'</b>';
+    read.innerHTML=s;
+  }
+  function stop(){if(timer){cancelAnimationFrame(timer);timer=null;}run.textContent='Run';}
+  function tick(){
+    for(let i=0;i<10&&t<TMAX;i++)step();
+    draw();
+    if(t<TMAX)timer=requestAnimationFrame(tick);else stop();
+  }
+  function start(){
+    if(t>=TMAX)reset(0);
+    if(matchMedia('(prefers-reduced-motion:reduce)').matches){for(let i=0;i<3000&&t<TMAX;i++)step();draw();return;}
+    run.textContent='Pause';timer=requestAnimationFrame(tick);
+  }
+  run.addEventListener('click',()=>{if(timer)stop();else start();});
+  rst.addEventListener('click',()=>{stop();seed=(seed*31+11)%100000;reset(900);draw();});
+  gs.addEventListener('input',()=>{stop();reset(900);draw();});
+  function pick(k){which=k;field=null;bF.setAttribute('aria-pressed',k==='flat'?'true':'false');bB.setAttribute('aria-pressed',k==='basins'?'true':'false');stop();reset(900);draw();}
+  bF.addEventListener('click',()=>pick('flat'));bB.addEventListener('click',()=>pick('basins'));
+  reset(900);draw();
+  return ()=>{field=null;draw();};
+}
+
+/* ---------------- Fig: data distributions -> posteriors -> observables ---------------- */
+function figTangent(){
+  const svg=$('#tm-svg'),hs=$('#tm-h'),hv=$('#tm-h-val'),read=$('#tm-read'); if(!svg)return;
+  function draw(){
+    const h=parseFloat(hs.value), c=colors(); hv.textContent=h.toFixed(2); clear(svg);
+    const T=(x,y,s,col,anchor)=>{const t=svgEl('text',{x,y,'text-anchor':anchor||'start'},svg);if(col)t.setAttribute('style','fill:'+col);
+      let shift=0;s.split(/([_^]\{[^}]*\})/).forEach(part=>{if(!part)return;const m=part.match(/^([_^])\{(.*)\}$/);const ts=svgEl('tspan',{},t);if(m){const d=m[1]==='_'?3:-4;ts.setAttribute('dy',d-shift);ts.setAttribute('font-size','8');ts.textContent=m[2];shift=d;}else{ts.setAttribute('dy',-shift);ts.textContent=part;shift=0;}});return t;};
+    const defs=svgEl('defs',{},svg);
+    [['ar',c.red],['ab',c.blue]].forEach(([id,col])=>{const m=svgEl('marker',{id:'tm-'+id,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);svgEl('path',{d:'M0,0L10,5L0,10z',fill:col},m);});
+    // data manifold
+    svgEl('path',{d:'M12,190 L170,165 L192,40 L34,65 Z',fill:'none',stroke:c.red,'stroke-width':1.5},svg);
+    const q=[100,150],qp=[160,75],qt=[52,118],qh=[q[0]+h*(qp[0]-q[0]),q[1]+h*(qp[1]-q[1])];
+    svgEl('line',{x1:q[0],y1:q[1],x2:qp[0],y2:qp[1],stroke:c.blue,'stroke-width':1.5},svg);
+    svgEl('line',{x1:q[0],y1:q[1],x2:qt[0],y2:qt[1],stroke:c.green,'stroke-width':1.5},svg);
+    svgEl('circle',{cx:q[0],cy:q[1],r:3.5,fill:c.blue},svg);T(q[0]-3,q[1]+15,'q',c.blue);
+    svgEl('circle',{cx:qp[0],cy:qp[1],r:3.5,fill:c.blue},svg);T(qp[0]+6,qp[1]-4,'q′',c.blue);
+    svgEl('circle',{cx:qt[0],cy:qt[1],r:3.5,fill:c.green},svg);T(qt[0]-14,qt[1]-5,'q̃',c.green);
+    svgEl('circle',{cx:qh[0],cy:qh[1],r:4.5,fill:c.red},svg);T(qh[0]+8,qh[1]+5,'q_{h}',c.red);
+    T(102,215,'Statistical manifold',c.red,'middle');T(102,229,'of data distributions',c.red,'middle');
+    // F
+    svgEl('line',{x1:204,y1:115,x2:262,y2:115,stroke:c.red,'stroke-width':1.5,'marker-end':'url(#tm-ar)'},svg);T(233,107,'F',c.red,'middle');
+    // posteriors
+    svgEl('path',{d:'M272,190 L430,165 L452,40 L294,65 Z',fill:'none',stroke:c.red,'stroke-width':1.5},svg);
+    const p0=[350,150],pc=[356,100],p1=[410,80];
+    const B=s=>[(1-s)*(1-s)*p0[0]+2*s*(1-s)*pc[0]+s*s*p1[0],(1-s)*(1-s)*p0[1]+2*s*(1-s)*pc[1]+s*s*p1[1]];
+    svgEl('path',{d:`M${p0[0]},${p0[1]} Q${pc[0]},${pc[1]} ${p1[0]},${p1[1]}`,fill:'none',stroke:c.blue,'stroke-width':1.5},svg);
+    svgEl('line',{x1:p0[0],y1:p0[1],x2:412,y2:140,stroke:c.green,'stroke-width':1.5},svg);
+    svgEl('circle',{cx:412,cy:140,r:3.5,fill:c.green},svg);
+    svgEl('circle',{cx:p0[0],cy:p0[1],r:3.5,fill:c.blue},svg);T(p0[0]-4,p0[1]+17,'p_{n}^{β}',c.blue);
+    svgEl('circle',{cx:p1[0],cy:p1[1],r:3.5,fill:c.blue},svg);
+    const ph=B(h);svgEl('circle',{cx:ph[0],cy:ph[1],r:4.5,fill:c.red},svg);T(ph[0]-8,ph[1]-3,'p_{n}^{β}(w|h)',c.red,'end');
+    T(362,215,'Posteriors',c.red,'middle');T(362,229,'Prob(W)',c.red,'middle');
+    // observables -> R
+    const x0=462,x1=600,yc=115;
+    [[-70,'⟨ϕ_{1}⟩'],[0,'⟨ϕ_{2}⟩'],[70,'⟨ϕ_{k}⟩']].forEach(([dy,lab])=>{svgEl('path',{d:`M${x0},${yc} Q${(x0+x1)/2},${yc+dy*1.6} ${x1},${yc+dy*0.12}`,fill:'none',stroke:c.blue,'stroke-width':1.5,'marker-end':'url(#tm-ab)'},svg);T((x0+x1)/2,yc+dy*0.8+(dy>0?16:dy<0?-6:-6),lab+'_{β,h}',c.blue,'middle');});
+    T((x0+x1)/2,yc+34,'⋮',c.ink2,'middle');
+    // the real line with the current values
+    svgEl('line',{x1:622,y1:30,x2:622,y2:200,class:'axis'},svg);T(622,22,'ℝ',null,'middle');
+    const slopes=[0.7,-0.5,0.3], base=[178,112,62], labs=['⟨ϕ_{1}⟩','⟨ϕ_{2}⟩','⟨ϕ_{k}⟩'];
+    slopes.forEach((sl,i)=>{const y0=base[i], y=y0-sl*60*h-(i===0?14*h*h:0);svgEl('line',{x1:616,y1:y0,x2:628,y2:y0,stroke:c.ink3,'stroke-width':1},svg);svgEl('circle',{cx:622,cy:y,r:4,fill:c.red},svg);T(632,y+3,labs[i],c.ink2);});
+    T(531,243,'Observables on posteriors',c.red,'middle');T(531,257,'see how they change with respect to h',c.red,'middle');
+    read.innerHTML='h = <b>'+h.toFixed(2)+'</b> · q<sub>h</sub> = (1−h)q + hq′ · grey ticks on ℝ: the unperturbed values at h = 0; the rate at which each red dot leaves its tick at h = 0 is nβ·χ for that observable';
+  }
+  hs.addEventListener('input',draw);draw();return draw;
+}
+
+/* keep a punctuation mark on the same line as the inline formula before it */
+function glue(){
+  $$('main mjx-container:not([display="true"])').forEach(m=>{const n=m.nextSibling;if(!n||n.nodeType!==3)return;const mt=n.textContent.match(/^[.,;:!?)]+/);if(!mt)return;const sp=document.createElement('span');sp.style.whiteSpace='nowrap';m.parentNode.insertBefore(sp,m);sp.appendChild(m);sp.appendChild(document.createTextNode(mt[0]));n.textContent=n.textContent.slice(mt[0].length);});
+}
+
+/* ---------------- boot ---------------- */
+function boot(){
+  number(); wireRefs(); wireToc(); wireDer();
+  const redraws=[figSgld(),figTangent()].filter(Boolean);
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>redraws.forEach(f=>f()));
+  new MutationObserver(()=>redraws.forEach(f=>f())).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  glue();
+  if(location.hash)setTimeout(flashTarget,300);
+  // typeset any math inside labels of controls that MathJax may have missed
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise($$('.controls'));
+}
+if(window.MathJax&&MathJax.startup&&MathJax.startup.promise){MathJax.startup.promise.then(boot);}
+else{document.addEventListener('DOMContentLoaded',()=>{const wait=()=>{if(window.MathJax&&MathJax.startup&&MathJax.startup.promise)MathJax.startup.promise.then(boot);else setTimeout(wait,100);};wait();});}
+})();
+</script>
+</body>
+</html>
