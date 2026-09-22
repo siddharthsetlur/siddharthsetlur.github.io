@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structural Inference for Protein Language Models</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ---------- tokens ---------- */
+:root{
+  --paper:#FCFCFA; --paper-2:#F3F3EE; --ink:#1C1E24; --ink-2:#4B4F5A; --ink-3:#7A7E88; --rule:#DCDCD4;
+  --blue:#1E4FD8; --red:#C8102E; --green:#0E7C4A; --purple:#6D3FC4; --teal:#0F766E; --amber:#B45309; --grey:#5F6470; --indigo:#27348B;
+  --blue-bg:#EEF2FD; --red-bg:#FCEEF0; --green-bg:#EAF6F0; --purple-bg:#F2EDFB; --teal-bg:#E7F4F2; --amber-bg:#FBF1E4; --grey-bg:#F1F2F4; --indigo-bg:#ECEEF8;
+  --link:#1E4FD8; --flash:#FFF3B0;
+  --shadow:0 8px 24px rgba(20,22,27,.14);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#14161B; --paper-2:#1C1F26; --ink:#E8E6E0; --ink-2:#B7B9C0; --ink-3:#858994; --rule:#2C3039;
+    --blue:#7FA0F5; --red:#F07A8C; --green:#5CC79A; --purple:#B79AF0; --teal:#5FC3B7; --amber:#F0B461; --grey:#A3A8B3; --indigo:#A5B0F2;
+    --blue-bg:#1A2236; --red-bg:#2E1A20; --green-bg:#152A21; --purple-bg:#241C36; --teal-bg:#132A28; --amber-bg:#2E2416; --grey-bg:#1F2229; --indigo-bg:#1B1F38;
+    --link:#7FA0F5; --flash:#4A3F12;
+    --shadow:0 8px 24px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14161B; --paper-2:#1C1F26; --ink:#E8E6E0; --ink-2:#B7B9C0; --ink-3:#858994; --rule:#2C3039;
+  --blue:#7FA0F5; --red:#F07A8C; --green:#5CC79A; --purple:#B79AF0; --teal:#5FC3B7; --amber:#F0B461; --grey:#A3A8B3; --indigo:#A5B0F2;
+  --blue-bg:#1A2236; --red-bg:#2E1A20; --green-bg:#152A21; --purple-bg:#241C36; --teal-bg:#132A28; --amber-bg:#2E2416; --grey-bg:#1F2229; --indigo-bg:#1B1F38;
+  --link:#7FA0F5; --flash:#4A3F12;
+  --shadow:0 8px 24px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+
+/* ---------- base ---------- */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-size:17px;line-height:1.6;}
+a{color:var(--link);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--link) 40%,transparent)}
+a:hover{border-bottom-color:var(--link)}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+h1,h2,h3{font-family:"Newsreader",Georgia,serif;font-weight:500;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:2.6rem;font-weight:400;letter-spacing:-.01em}
+h2{font-size:1.75rem;margin-top:3.2rem;margin-bottom:.9rem;padding-top:1.2rem;border-top:1px solid var(--rule)}
+h3{font-size:1.25rem;margin-top:2.2rem;margin-bottom:.6rem}
+h2 .num,h3 .num{color:var(--ink-3);font-variant-numeric:tabular-nums;margin-right:.55em;font-weight:400}
+p{margin:.75rem 0}
+ul,ol{padding-left:1.4rem;margin:.6rem 0}
+li{margin:.25rem 0}
+u{text-decoration-thickness:1px;text-underline-offset:3px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+hr.sep{border:0;border-top:1px solid var(--rule);margin:2.5rem 0}
+
+/* ---------- layout ---------- */
+.wrap{display:grid;grid-template-columns:minmax(0,1fr);max-width:1200px;margin:0 auto;padding:0 1.25rem}
+@media (min-width:1080px){.wrap{grid-template-columns:230px minmax(0,1fr);gap:3rem}}
+main{width:100%;max-width:70ch;margin:0 auto;padding-bottom:6rem;min-width:0}
+@media (min-width:1080px){main{margin:0}}
+nav.toc{display:none}
+@media (min-width:1080px){
+  nav.toc{display:block;position:sticky;top:1.5rem;align-self:start;max-height:calc(100vh - 3rem);overflow:auto;padding:2.2rem 0 1rem;font-size:.86rem;line-height:1.35}
+  nav.toc ol{list-style:none;padding:0;margin:0}
+  nav.toc li{margin:.28rem 0}
+  nav.toc li.l3{padding-left:1rem;font-size:.8rem}
+  nav.toc a{color:var(--ink-2);border:0;display:block;padding:.1rem 0 .1rem .6rem;border-left:2px solid transparent}
+  nav.toc a.active{color:var(--ink);border-left-color:var(--red)}
+  nav.toc a:hover{color:var(--ink)}
+  nav.toc .toc-tools{margin-top:1.2rem;padding-top:.8rem;border-top:1px solid var(--rule)}
+}
+header.masthead{padding:3.5rem 0 1.5rem}
+header.masthead .disclaimer{font-size:.95rem;line-height:1.55;color:var(--ink-2);margin:1rem 0 0;padding-left:.9rem;border-left:2px solid var(--rule);max-width:62ch}
+header.masthead .meta{margin-top:1.1rem;display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:1.4rem;font-size:.8rem;color:var(--ink-2)}
+.legend span::before{content:"";display:inline-block;width:.6em;height:.6em;border-radius:50%;margin-right:.4em;background:var(--c);vertical-align:-.02em}
+button.tool{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);background:transparent;border:1px solid var(--rule);border-radius:3px;padding:.3rem .55rem;cursor:pointer}
+button.tool:hover{border-color:var(--ink-3);color:var(--ink)}
+
+/* ---------- equations & refs ---------- */
+.eq{position:relative;margin:.9rem 0;padding-right:3.2rem;overflow-x:auto;overflow-y:hidden;scroll-margin-top:5rem}
+.eq mjx-container[display="true"]{margin:.35rem 0!important}
+.eq .eqno{position:absolute;right:0;top:50%;transform:translateY(-50%);font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--ink-3);border:0;padding:.1rem .25rem}
+.eq .eqno:hover{color:var(--ink)}
+.eq.flash,.callout.flash,details.flash,figure.flash,h2.flash,h3.flash,.ref-target.flash,.tblwrap.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{background:var(--flash)}100%{background:transparent}}
+.eq.boxed mjx-container{padding:.3rem .6rem}
+a.ref,a.cite{white-space:nowrap}
+a.cite{font-family:"IBM Plex Mono",monospace;font-size:.82em}
+.popover{position:absolute;z-index:50;max-width:min(560px,92vw);background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:4px;box-shadow:var(--shadow);padding:.6rem .9rem;font-size:.92rem;line-height:1.45;pointer-events:none;overflow:hidden}
+.popover .eq{padding-right:0;margin:0}
+.popover .eqno{display:none}
+.popover .callout{margin:0;max-height:260px;overflow:hidden}
+.popover .pop-label{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:.25rem}
+.popover figure{margin:0}.popover figure .figbody{display:none}.popover figcaption{font-size:.85rem}
+.popover details{display:block}.popover details summary{display:none}.popover details>*{display:block}
+#backbtn{position:fixed;right:1rem;bottom:1rem;z-index:40;display:none;font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:0;border-radius:999px;padding:.55rem .9rem;cursor:pointer;box-shadow:var(--shadow)}
+#backbtn.show{display:block}
+
+/* ---------- callouts ---------- */
+.callout{margin:1.2rem 0;padding:.75rem 1rem .8rem 1.1rem;border-left:3px solid var(--c);background:var(--cbg);border-radius:0 4px 4px 0;scroll-margin-top:5rem}
+.callout .head{display:flex;flex-wrap:wrap;gap:.2rem .6rem;align-items:baseline;margin-bottom:.35rem}
+.callout .kind{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--c);font-weight:500}
+.callout .ttl{font-family:"Newsreader",serif;font-size:1.08rem;font-weight:500;color:var(--ink)}
+.callout>p:first-of-type{margin-top:.2rem}
+.callout>:last-child{margin-bottom:.1rem}
+.callout .eq{padding-right:2.6rem}
+.def{--c:var(--blue);--cbg:var(--blue-bg)}
+.int{--c:var(--red);--cbg:var(--red-bg)}
+.ex{--c:var(--green);--cbg:var(--green-bg)}
+.rem{--c:var(--purple);--cbg:var(--purple-bg)}
+.ahead{--c:var(--teal);--cbg:var(--teal-bg)}
+.warn{--c:var(--amber);--cbg:var(--amber-bg)}
+.der{--c:var(--grey);--cbg:var(--grey-bg)}
+.lem{--c:var(--indigo);--cbg:var(--indigo-bg)}
+details.callout{padding:0}
+details.callout summary{list-style:none;cursor:pointer;padding:.7rem 1rem .7rem 1.1rem;display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+details.callout summary::-webkit-details-marker{display:none}
+details.callout summary::before{content:"▸";font-family:"IBM Plex Mono",monospace;color:var(--c);transition:transform .15s}
+details.callout[open] summary::before{transform:rotate(90deg)}
+details.callout summary .hint{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+details.callout .body{padding:0 1rem .9rem 1.1rem}
+
+/* ---------- tables ---------- */
+.tblwrap{overflow-x:auto;margin:1rem 0}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th{text-align:left;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:500;padding:.4rem .6rem .4rem 0;border-bottom:1px solid var(--ink-3)}
+td{padding:.45rem .6rem .45rem 0;border-bottom:1px solid var(--rule);vertical-align:top}
+td:first-child{white-space:nowrap}
+.notation td:first-child{white-space:normal;width:36%}
+.notation td:nth-child(2){width:27%}
+.notation th:first-child{width:36%}.notation th:nth-child(2){width:27%}
+.notation td:nth-child(3){color:var(--ink-2);font-size:.9rem}
+table caption{caption-side:bottom;text-align:left;font-size:.85rem;color:var(--ink-2);padding:.5rem 0}
+.diagram{overflow-x:auto}
+
+/* ---------- figures ---------- */
+figure{margin:1.6rem 0;scroll-margin-top:5rem}
+figure .figbody{background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;padding:.9rem;overflow:hidden}
+figcaption{font-size:.88rem;color:var(--ink-2);margin-top:.55rem;line-height:1.45}
+figcaption .figno{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-right:.5em}
+.controls{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;align-items:center;margin-bottom:.7rem;font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--ink-2)}
+.controls label{display:flex;align-items:center;gap:.45rem}
+.controls input[type=range]{width:130px;accent-color:var(--red)}
+.controls select{font:inherit;font-size:.76rem;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:.15rem .3rem}
+.controls .val{min-width:5ch;color:var(--ink);font-variant-numeric:tabular-nums}
+.controls .seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.controls .seg button{font:inherit;background:transparent;color:var(--ink-2);border:0;padding:.25rem .55rem;cursor:pointer}
+.controls .seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.panels{display:grid;gap:.8rem;grid-template-columns:1fr}
+@media (min-width:640px){.panels.two{grid-template-columns:1fr 1fr}.panels.three{grid-template-columns:1fr 1fr 1fr}}
+.panel{min-width:0}
+.panel .plab{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--ink-3);margin-bottom:.3rem;text-align:center}
+canvas,svg.plot{display:block;width:100%;height:auto}
+.readout{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--ink-2);margin-top:.5rem;font-variant-numeric:tabular-nums}
+.readout b{color:var(--ink);font-weight:500}
+figure .paperfig{background:#fff;padding:.5rem}
+figure .paperfig img{display:block;width:100%;height:auto}
+.controls button.tool{font-size:.7rem}
+.p1previews{position:absolute;left:-9999px;top:0;width:520px;visibility:hidden}
+.popover .p1prev p{margin:.3rem 0}
+h1{font-size:2.2rem}
+svg.plot text{font-family:"IBM Plex Mono",monospace;font-size:10px;fill:var(--ink-2)}
+svg.plot .axis{stroke:var(--ink-3);stroke-width:1}
+svg.plot .grid{stroke:var(--rule);stroke-width:1}
+
+/* ---------- refs list ---------- */
+.refs{list-style:none;padding:0}
+.refs li>span:last-child{min-width:0;overflow-x:auto;overflow-y:hidden}
+.refs li{display:grid;grid-template-columns:5.5em minmax(0,1fr);gap:.6rem;margin:.6rem 0;scroll-margin-top:5rem}
+.refs .key{font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--ink-2)}
+.refs .note{color:var(--ink-2);font-size:.9rem}
+.circ{display:inline-block;width:1.35em;height:1.35em;border-radius:50%;border:1px solid currentColor;text-align:center;line-height:1.3em;font-size:.78em;margin-right:.35em;vertical-align:.05em}
+.next{font-family:"Newsreader",serif;font-size:1.15rem}
+</style>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'],['\\(','\\)']],
+    displayMath: [['$$','$$'],['\\[','\\]']],
+    processEscapes: true,
+    macros: {
+      X: '\\mathcal{X}', Y: '\\mathcal{Y}', R: '\\mathbb{R}', E: '\\mathbb{E}',
+      dd: '\\,\\mathrm{d}', ws: 'w^{*}', us: 'u^{*}', eps: '\\varepsilon', gr: '\\nabla', Zn: 'Z_n', Fn: 'F_n',
+      Cov: '\\mathrm{Cov}', Hil: '\\mathcal{H}', Cc: '\\mathcal{C}', lhat: '\\hat\\lambda', pig: '\\pi^{\\beta}_{\\gamma}',
+      xh: '\\hat{x}^{*}', vh: '\\hat{v}^{*}', lxy: '\\ell_{(x,y)}', Lp: '\\Lambda^{+}', Lpp: '\\Lambda^{++}'
+    }
+  },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  startup: { typeset: true }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" id="MathJax-script" async></script>
+</head>
+
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="Sections"><div class="eyebrow" style="margin-bottom:.6rem">Contents</div><ol id="toclist"></ol>
+<div class="toc-tools"><button class="tool" id="toggle-der">Expand derivations</button></div></nav>
+
+<main>
+<header class="masthead">
+  <div class="eyebrow">Informal notes · Part 3 · <a href="../slt-notes/">Part 1: Basics</a> · <a href="../slt-susceptibilities/">Part 2: Susceptibilities</a></div>
+  <h1>Structural Inference for Protein Language Models</h1>
+  <p class="disclaimer">This is an informal research proposal for structural inference of protein language models. These notes were sketched on my iPad and transcribed by Claude, which I asked to turn my handwritten notes into this interactive page. It leans on definitions in <a href="../slt-notes/">Part 1</a>, <a href="../slt-susceptibilities/">Part 2</a>, throughout, and there might be related work or references that I have forgotten to add.</p>
+  <div class="meta"><span class="eyebrow">Siddharth Setlur · September 2026</span> <button class="tool" id="toggle-der-2">Expand derivations</button></div>
+  <div class="legend" aria-label="Callout colours">
+    <span style="--c:var(--blue)">Definition</span><span style="--c:var(--indigo)">Lemma</span><span style="--c:var(--red)">Intuition</span><span style="--c:var(--green)">Example</span><span style="--c:var(--purple)">Remark</span><span style="--c:var(--teal)">Looking ahead</span><span style="--c:var(--amber)">Caution</span><span style="--c:var(--grey)">Derivation (click to expand)</span>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<h2 id="sec:intro">Introduction</h2>
+
+<p>Protein language models (pLMs) such as the ESM family are masked language models trained on a large corpus of protein sequences. As is standard in BERT style architectures, for each sequence 15% of the residues are masked, and the model is tasked with predicting the masked portion given the unmasked. Note that this is where the model differs from LLMs, which are autoregressive. Here context on either end is critical, since they determine downstream things like structure prediction.</p>
+
+<p>Impressively, despite only being trained on these sequences, the representations built up by these models perform well on downstream tasks such as structure prediction <a class="cite" data-ref="ref-Lin23">[Lin23]</a> and function <a class="cite" data-ref="ref-Che25">[Che25]</a>. These predictions generalize to unannotated metagenomic sequences <a class="cite" data-ref="ref-Lin23">[Lin23]</a>, such as uncharacterised microbial enzymes and viral sequences <a class="cite" data-ref="ref-Fla24">[Fla24]</a>, <a class="cite" data-ref="ref-Thu25">[Thu25]</a>.</p>
+
+<p>Understanding the internals of these models has significant biological and biosafety implications. On one hand, internal representations of foundation models have been used to derive novel biological and medical insights <a class="cite" data-ref="ref-Good25">[Good25]</a>. Conversely, these tools can be harnessed to malicious ends, by a bad actor or, more likely, given the fact that these foundation models are used as tools by general LLM agents for iterative design, and we move closer to wet lab orchestration of structures synthesized by agents using foundation models.</p>
+
+<p>The prevalent mitigation strategy is filtering out harmful sequences from the pretraining corpus <a class="cite" data-ref="ref-Hay25">[Hay25]</a>, <a class="cite" data-ref="ref-Bri26">[Bri26]</a> and evaluating perplexity on those held out sequences after training, in the hopes that the harmful capability has been removed. However, given that these models excel at generalization, it is plausible that the model retains the capability in an underdeveloped circuit (showing low perplexity on the particular held out sequences). Ensuring that the capability is removed on a structural level would significantly enhance biosafety of these deployed models.</p>
+
+<p>Existing work, including <a class="cite" data-ref="ref-IPLM">[IPLM]</a>, has used SAEs to better understand pLM internals. They are a significant step toward understanding the latent representations of these models and demonstrate that the latent representations encode geometric structure of protein sequences.</p>
+
+<div class="callout ahead" data-kind="ahead"><div class="head"><span class="kind">Looking ahead</span><span class="ttl">why this setting; repeated from <a class="ref" data-ref="sec:structural-inference"></a></span></div>
+<p>In fact, protein language has far more structure than natural language, making the framework more naturally applicable in this setting.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec:structural-inference">Structural inference</h2>
+
+<p>Recent work <a class="cite" data-ref="ref-Bak25">[Bak25]</a>, <a class="cite" data-ref="ref-Gor26">[Gor26]</a> has developed susceptibilities as a means of connecting structure in data to structure in the model. Susceptibilities characterize a model's first order response to perturbations in the training distribution (<a class="p1ref" href="../slt-susceptibilities/#def:susceptibility" data-ref="p2-def-chi">Part 2, Section 3.3, Definition 1</a>). The framework is extremely general and translates immediately to the masked language setting.</p>
+
+<p>In fact, protein language has far more structure than natural language, making the framework more naturally applicable in this setting.</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:setup">Setup</h2>
+
+<p>We will first consider ESM-8M, which has $|\Sigma|=33$ (tokens) with 6 layers and 20 attention heads per layer. This would be a first step, as we expect more interesting results at the 650M scale. Though given findings for ESM-8M in our prior work <a class="cite" data-ref="ref-Set26">[Set26]</a> and related SAE work <a class="cite" data-ref="ref-IPLM">[IPLM]</a>, we expect non-trivial structure at the 8M scale.</p>
+
+<h3 id="sec:framework-mlm">The susceptibilities framework translated for masked language models</h3>
+
+<p>The standard learning problem setup $(p,q,\varphi)$ defined earlier (<a class="p1ref" href="../slt-notes/#sec:learning-problem" data-ref="p1-setup">Part 1, Section 2</a>) applies here. Concretely:</p>
+<ul>
+<li>$X\times Y$ is the training data, where a sample $(x,y)$ consists of a protein sequence $x$ with 15% of its residue positions masked, and $y$ the ground truth in those masked positions;</li>
+<li>$W$: parameter space (unchanged);</li>
+<li>$w\mapsto p(\cdot|w)$: the parameter function map (unchanged);</li>
+<li>$q(x,y)$: the true distribution on $X\times Y$. The change to masked language modelling from autoregressive does not change much here;</li>
+<li>$\varphi$: prior on $W$ (unchanged).</li>
+</ul>
+
+<p>Also recall that given a component $C$ of the model and a sample $(x,y)\in X\times Y$, the per sample susceptibility (<a class="p1ref" href="../slt-susceptibilities/#def:per-token" data-ref="p2-def-per-token">Part 2, Section 3.6, Definition 4</a>) is</p>
+<div class="eq" id="eq:per-sample">$$\chi^C_{(x,y)}=-\Cov_\beta\big(\phi_C,\ \lxy(w)-L(w)\big),$$</div>
+<p>where $\beta$ is the inverse temperature used to temper the posterior we sample $w$ from (<a class="p1ref" href="../slt-susceptibilities/#sec:beta" data-ref="p2-beta">Part 2, Section 2.3</a>), and</p>
+<div class="eq" id="eq:phiC">$$\phi_C(w)=\delta(u-\us)\big[L(w)-L(\ws)\big],$$</div>
+<p>writing $W=U\times C$ (<a class="p1ref" href="../slt-susceptibilities/#def:phiC" data-ref="p2-def-phiC">Part 2, Section 3.5, Definition 3</a>).</p>
+
+<p>None of this is blocked by the change to masked language models.</p>
+
+<h3 id="sec:spectrum">Spectrum of protein language</h3>
+
+<figure id="fig:structural-inference" data-kind="fig">
+<div class="figbody">
+<svg class="plot" id="si-svg" viewBox="0 0 660 130" role="img" aria-label="Diagram: a box labelled structure in data on the left and a box labelled structure in model internals on the right, joined by a double-headed arrow labelled structural inference.">
+  <defs>
+    <marker id="si-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink-2)"/></marker>
+  </defs>
+  <rect x="24" y="34" width="212" height="62" rx="10" fill="none" stroke="var(--ink-3)" stroke-width="1.4"/>
+  <text x="130" y="60" text-anchor="middle" style="font-size:13px;fill:var(--ink)">Structure in</text>
+  <text x="130" y="78" text-anchor="middle" style="font-size:13px;fill:var(--ink)">data</text>
+  <rect x="424" y="34" width="212" height="62" rx="10" fill="none" stroke="var(--ink-3)" stroke-width="1.4"/>
+  <text x="530" y="60" text-anchor="middle" style="font-size:13px;fill:var(--ink)">Structure in model</text>
+  <text x="530" y="78" text-anchor="middle" style="font-size:13px;fill:var(--ink)">internals</text>
+  <path d="M252 65 H408" fill="none" stroke="var(--ink-2)" stroke-width="1.4" marker-start="url(#si-ar)" marker-end="url(#si-ar)"/>
+  <text x="330" y="52" text-anchor="middle" style="font-size:12px;fill:var(--ink-2)">Structural</text>
+  <text x="330" y="88" text-anchor="middle" style="font-size:12px;fill:var(--ink-2)">inference</text>
+</svg>
+</div>
+<figcaption>Structural inference relates structure in the data to structure in the model's internals. The existing work sits on the arrow. The rest of this section is about the left hand box: for protein language, we can write down what the structure in the data actually is.</figcaption>
+</figure>
+
+<p>The key insight of <a class="cite" data-ref="ref-CM25">[CM25]</a>, exploited in <a class="cite" data-ref="ref-Bak25">[Bak25]</a> and <a class="cite" data-ref="ref-Gor26">[Gor26]</a>, is that data admits “modes” or patterns that explain why a certain token $y$ follows a context $x$. This is the structure on the data side. Each pair $(x,y)$ can be explained by a (hopefully sparse) set of patterns. A model learns these patterns, and this is reflected in the internal structure of the model. Susceptibilities isolate this structure by probing the model with data and measuring its response to this data.</p>
+
+<p>Formally, if one had access to the conditional $q(y|x)$, applying SVD to this matrix would yield a change of basis (<a class="p1ref" href="../slt-susceptibilities/#sec:mode-basis" data-ref="p2-svd">Part 2, Section 5.3, Eq. (44)</a> for the details) from a per token basis to a <a class="p1ref" href="../slt-susceptibilities/#eq:mode-basis" data-ref="p2-modes-basis">modes basis</a>. Each context-token pair $(x,y)$ expressed in the modes basis yields a <a class="p1ref" href="../slt-susceptibilities/#def:propensity" data-ref="p2-def-propensity">propensity profile</a> $\{s_{\alpha\beta}(xy)\}_{\alpha\beta}$.</p>
+
+<div class="callout int" id="int:excites" data-kind="int"><div class="head"><span class="kind">Intuition</span><span class="ttl">$(x,y)$ excites mode $\alpha$; repeated from <a class="p1ref" href="../slt-susceptibilities/#int:excites" data-ref="p2-int-excites">Part 2, Section 5.4, Intuition 12</a></span></div>
+<p>Given a context $x$ and a continuation $y$, we say $(x,y)$ <em>excites</em> mode $\alpha$ if, when we write in the modes basis</p>
+<div class="eq nonum">$$y\circ\xh=\sum s_{\alpha\beta}(xy)\,e_{\alpha\beta},$$</div>
+<p>the diagonal term $s_{\alpha\alpha}(xy)$ dominates. This says that:</p>
+<p><span class="circ">1</span>the context $x$ is an $\alpha$ pattern;</p>
+<p><span class="circ">2</span>$y$ is a continuation the $\alpha$ pattern predicts.</p>
+<p>If $x$ looks like an $\alpha$ pattern but $y$ is not a continuation consistent with $\alpha$, we get the off diagonal term $s_{\alpha\beta}(xy)$ being large.</p>
+<p>Note none of this is a statement about the model, this is purely a statement about structure in the data distribution. Susceptibilities connect this structure in data to structure in the model.</p>
+</div>
+
+<div class="callout ex" id="ex:nl-modes" data-kind="ex"><div class="head"><span class="kind">Example</span><span class="ttl">modes in natural language</span></div>
+<p>In natural language, examples of modes could be induction patterns, or <span class="mono">"."</span> followed by capital letters, among others. See <a class="cite" data-ref="ref-Gor26">[Gor26]</a> for more examples.</p>
+</div>
+
+<div class="callout warn" id="caut:no-oracle" data-kind="warn"><div class="head"><span class="kind">Caution</span><span class="ttl">the problem</span></div>
+<p>We have no access to $q(y|x)$, and consequently no means of getting the modes basis.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec:protein-modes">Protein language modes constrained by biophysics and evolution</h2>
+
+<p>Protein language is comprised of a 21-letter alphabet (20 amino acids and a gap) and the primary object of study is the protein sequence of length $L$ over this alphabet. A key problem in biology is predicting structure (the 3D folded protein) and function from this sequence. Seminal work <a class="cite" data-ref="ref-Anf73">[Anf73]</a> provides strong evidence that amino acid sequences strongly determine folded structure. Combined with the fact that naturally occurring proteins stem from an evolutionary process, there are many constraints on protein sequences.</p>
+
+<h3 id="sec:msa">Evolution and multiple sequence alignment</h3>
+
+<p>The first characterization of a protein sequence is evolutionary. Given a sequence $x$, one can query large sequence databases such as UniRef <a class="cite" data-ref="ref-UniRef">[UniRef]</a> for homologs, i.e. other sequences that share a common ancestor evolutionarily. For example, hemoglobin proteins are found across species and are evolutionarily closely related but distinct.</p>
+
+<p>Given a collection of evolutionarily related sequences $\{x^i\}_i$ (called a family), one can perform multiple sequence alignment (MSA) on these sequences.</p>
+
+<p>MSA inserts gaps so each column corresponds to the same structural position across sequences. Across a family $\{x^i\}_i$, evolution leads to discrepancies, so relating raw residue positions across sequences does not make sense. MSA aligns them so that they do match up.</p>
+
+<p>MSA aligned families are the input to systems such as AlphaFold <a class="cite" data-ref="ref-AF2">[AF2]</a>, which can predict structure with staggering accuracy given MSAs. The biological intuition behind this is that these families share folding properties, and MSA is a means of sampling from this fold consistent family.</p>
+
+<h3 id="sec:structural-constraints">Structural constraints</h3>
+
+<p>Let $x_i$ and $x_j$ be residue positions. Suppose that upon folding $x_i$ and $x_j$ are spatially close in 3D space, then the amino acids at these positions likely covary <a class="cite" data-ref="ref-Gob94">[Göb94]</a>. For example, if $x_i$ flips from positive to negative charge and $x_j$ is spatially close to $x_i$, then it must mutate accordingly.</p>
+
+<div class="callout rem" id="rem:correlation" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">correlation isn't the whole story</span></div>
+<p>Correlation isn't the whole story, since</p>
+<div class="eq nonum">$$i\text{ and }j\text{ covary}\ \Longrightarrow\ \text{close in the folded 3D space}$$</div>
+<p>is <strong>false</strong>. In particular transitivity fails:</p>
+<div class="eq nonum">$$(i\leftrightarrow j\text{ covary})\ \wedge\ (j\leftrightarrow k\text{ covary})\ \Longrightarrow\ (i\leftrightarrow k\text{ covary}),$$</div>
+<p>but $i$ and $k$ might not be close in the folded structure. More sophisticated techniques like the Potts model <a class="cite" data-ref="ref-Mor11">[Mor11]</a> account for this.</p>
+</div>
+
+<h3 id="sec:corpus">A corpus of patterns</h3>
+
+<p>Other common motifs include:</p>
+<p><span class="circ">1</span><a class="ref" data-ref="tab:short-motifs"></a>: short motifs;</p>
+<p><span class="circ">2</span><a class="ref" data-ref="tab:periodic"></a>: periodic patterns from secondary structure;</p>
+<p><span class="circ">3</span><a class="ref" data-ref="tab:segment"></a>: segment level patterns;</p>
+<p><span class="circ">4</span><a class="ref" data-ref="tab:pairwise"></a>: long range pairwise patterns;</p>
+<p>and, beyond the four, <a class="ref" data-ref="tab:higher-order"></a>: higher-order patterns.</p>
+
+<p>In each table, $x$ is the sequence, $i$ the position of interest, and $y$ the residue at $i$; $x_{\backslash i}$ is the sequence with position $i$ removed.</p>
+
+<div class="tblwrap" id="tab:short-motifs" data-kind="tab"><table>
+<thead><tr><th>Pattern</th><th>Tool / database</th><th>What you do for $(x,i)$</th><th>Constraint on $y$</th></tr></thead>
+<tbody>
+<tr><td style="white-space:normal">Any PROSITE pattern</td><td>PROSITE <a class="cite" data-ref="ref-c1">[1]</a>; ScanProsite or local <span class="mono">ps_scan</span> with <span class="mono">prosite.dat</span> <a class="cite" data-ref="ref-c2">[2]</a></td><td>Scan $x$ with $i$ wildcarded; keep matches spanning $i$; record pattern and which slot $i$ occupies</td><td>Allowed set at that slot</td></tr>
+<tr><td style="white-space:normal">N-glycosylation</td><td>PROSITE PS00001: <span class="mono">N-{P}-[ST]-{P}</span></td><td>As above</td><td>N at the first slot; {S, T} at the third; not P at the {P} slots</td></tr>
+<tr><td style="white-space:normal">Walker A / P-loop</td><td>PROSITE PS00017: <span class="mono">[AG]-x(4)-G-K-[ST]</span>; Walker et al. <a class="cite" data-ref="ref-c3">[3]</a></td><td>As above; confirm the Pfam domain is a P-loop NTPase family, since the regex alone over-matches</td><td>G, K, S/T at fixed slots</td></tr>
+<tr><td style="white-space:normal">C2H2 zinc finger</td><td>PROSITE PS00028; UniProt “Zinc finger” feature <a class="cite" data-ref="ref-c16">[16]</a></td><td>Regex scan, or read the curated feature</td><td>C or H at zinc-binding slots</td></tr>
+<tr><td style="white-space:normal">Short linear motifs</td><td>ELM <a class="cite" data-ref="ref-c4">[4]</a>; REST API gives validated instances per accession plus class regexes</td><td>Prefer validated instances for the accession; raw regex hits are mostly false positives</td><td>Allowed set from the ELM regex</td></tr>
+<tr><td style="white-space:normal">GxxxG</td><td>Regex <span class="mono">G-x(3)-G</span> restricted to TM segments; Russ &amp; Engelman <a class="cite" data-ref="ref-c5">[5]</a></td><td>Check $i$ is a G slot of a GxxxG inside a TM helix</td><td>G, sometimes A or S (small-xxx-small)</td></tr>
+</tbody>
+<caption><span class="figno tabno"></span>Short motifs.</caption>
+</table></div>
+
+<div class="tblwrap" id="tab:periodic" data-kind="tab"><table>
+<thead><tr><th>Pattern</th><th>Tool / database</th><th>What you do for $(x,i)$</th><th>Constraint on $y$</th></tr></thead>
+<tbody>
+<tr><td style="white-space:normal">Secondary structure state</td><td>Experimental structure via SIFTS <a class="cite" data-ref="ref-c9">[9]</a>, or AlphaFold DB model <a class="cite" data-ref="ref-c6">[6]</a>, <a class="cite" data-ref="ref-c7">[7]</a>; run DSSP <a class="cite" data-ref="ref-c8">[8]</a>. Structure-free option: PSIPRED <a class="cite" data-ref="ref-c37">[37]</a>, which uses PSSMs</td><td>DSSP state at $i$ (H, G, I, E, B, T, S, coil); drop residues with pLDDT &lt; 70</td><td>Helix favors A, L, E, M, K; strand favors V, I, Y, F, T; P and G disfavored in helices <a class="cite" data-ref="ref-c10">[10]</a></td></tr>
+<tr><td style="white-space:normal">Burial</td><td>Same DSSP run; normalize ASA by the maxima of Tien et al. <a class="cite" data-ref="ref-c11">[11]</a></td><td>Relative solvent accessibility at $i$</td><td>Buried (RSA &lt; ~0.2): hydrophobic; exposed: polar and charged tolerated</td></tr>
+<tr><td style="white-space:normal">Amphipathic helix face</td><td>Hydrophobic moment, Eisenberg et al. <a class="cite" data-ref="ref-c12">[12]</a></td><td>Compute the moment on a helical window from $x_{\backslash i}$, then check whether $i$ points into the hydrophobic face</td><td>Hydrophobic on the face, polar opposite</td></tr>
+<tr><td style="white-space:normal">Heptad register</td><td>Sequence: COILS <a class="cite" data-ref="ref-c13">[13]</a>. Structure: SOCKET <a class="cite" data-ref="ref-c14">[14]</a> on oligomeric assemblies; CC+ database <a class="cite" data-ref="ref-c15">[15]</a>. Curated: UniProt “Coiled coil” <a class="cite" data-ref="ref-c16">[16]</a></td><td>Assign $i$ to a heptad position a–g</td><td>a, d: L, I, V, M; e, g: often E, K</td></tr>
+<tr><td style="white-space:normal">Strand alternation</td><td>DSSP strand state plus RSA of $i\pm1$, $i\pm2$</td><td>Infer which face $i$ points to from neighbors' burial</td><td>Hydrophobic on the buried face, polar on the exposed one</td></tr>
+<tr><td style="white-space:normal">Helix caps and turns</td><td>DSSP turn/bend states and helix boundaries</td><td>Is $i$ at an N-cap, C-cap, or turn?</td><td>P in the first helical turn; G at C-caps and turns; S/T/D/N at N-caps</td></tr>
+</tbody>
+<caption><span class="figno tabno"></span>Periodic patterns from secondary structure.</caption>
+</table></div>
+
+<div class="tblwrap" id="tab:segment" data-kind="tab"><table>
+<thead><tr><th>Pattern</th><th>Tool / database</th><th>What you do for $(x,i)$</th><th>Constraint on $y$</th></tr></thead>
+<tbody>
+<tr><td style="white-space:normal">Transmembrane helix</td><td>Curated: UniProt “Transmembrane” with evidence codes <a class="cite" data-ref="ref-c16">[16]</a>. Experimental: PDBTM <a class="cite" data-ref="ref-c17">[17]</a>, OPM <a class="cite" data-ref="ref-c18">[18]</a>. Predicted: TMHMM <a class="cite" data-ref="ref-c19">[19]</a> or Phobius <a class="cite" data-ref="ref-c20">[20]</a>, both HMM-based</td><td>Is $i$ inside a TM segment, near its centre or its ends?</td><td>Core: hydrophobic; ends: aromatic belt (W, Y) and positive residues on the cytoplasmic side</td></tr>
+<tr><td style="white-space:normal">Signal peptide</td><td>Curated: UniProt “Signal” <a class="cite" data-ref="ref-c16">[16]</a>. Predicted: Phobius <a class="cite" data-ref="ref-c20">[20]</a> or SignalP 4.1 <a class="cite" data-ref="ref-c21">[21]</a>, which is a neural network on sequence windows with no PLM. Region structure: von Heijne <a class="cite" data-ref="ref-c22">[22]</a></td><td>Is $i$ in the n-, h-, or c-region, or at the cleavage site?</td><td>n: K, R; h: hydrophobic; c: small residues at $-3$ and $-1$ (A, G, S)</td></tr>
+<tr><td style="white-space:normal">Disorder</td><td>Experimental: DisProt <a class="cite" data-ref="ref-c23">[23]</a>. Broad: MobiDB <a class="cite" data-ref="ref-c24">[24]</a>, whose MobiDB-lite consensus uses classical predictors. Predicted: IUPred3 <a class="cite" data-ref="ref-c25">[25]</a>, an energy-estimation method. Proxy: AlphaFold pLDDT &lt; 50 <a class="cite" data-ref="ref-c26">[26]</a></td><td>Is $i$ in a disordered region?</td><td>Compositional: enriched in P, E, S, Q, K; depleted in W, C, F, I, Y, V, L</td></tr>
+<tr><td style="white-space:normal">Low complexity</td><td>SEG <a class="cite" data-ref="ref-c27">[27]</a>; UniProt “Compositional bias” <a class="cite" data-ref="ref-c16">[16]</a></td><td>Is $i$ in a low-complexity window?</td><td>Biased toward the window's dominant residues</td></tr>
+</tbody>
+<caption><span class="figno tabno"></span>Segment-level patterns.</caption>
+</table></div>
+
+<div class="tblwrap" id="tab:pairwise" data-kind="tab"><table>
+<thead><tr><th>Pattern</th><th>Tool / database</th><th>What you do for $(x,i)$</th><th>Constraint on $y$</th></tr></thead>
+<tbody>
+<tr><td style="white-space:normal">Structural contacts</td><td>Experimental structure via SIFTS <a class="cite" data-ref="ref-c9">[9]</a>, else AlphaFold DB <a class="cite" data-ref="ref-c6">[6]</a></td><td>List $j$ with C$\beta$–C$\beta$ &lt; 8 Å and separation $\ge 6$</td><td>Complementarity with $x_j$: charge pairing, hydrophobic packing, Cys–Cys disulfide</td></tr>
+<tr><td style="white-space:normal">Coevolutionary couplings</td><td>MSA from jackhmmer or hmmalign against Pfam <a class="cite" data-ref="ref-c28">[28]</a>, <a class="cite" data-ref="ref-c29">[29]</a>; fit with plmc/EVcouplings <a class="cite" data-ref="ref-c30">[30]</a>, CCMpred <a class="cite" data-ref="ref-c31">[31]</a>, or GREMLIN <a class="cite" data-ref="ref-c32">[32]</a>; score with APC <a class="cite" data-ref="ref-c33">[33]</a></td><td>Rank partners $j$ of $i$ by coupling; read the contributions $J_{ij}(a,x_j)$ to $q(y=a\mid x_{\backslash i})$</td><td>The Potts conditional itself; top partners are the explanation</td></tr>
+<tr><td style="white-space:normal">Contact-map textures</td><td>Contact map plus DSSP; no extra database</td><td>Is $i$ in a helix with $i\pm3/4$ contacts, or paired across a sheet with a specific partner?</td><td>Pair preferences via the partner's residue</td></tr>
+</tbody>
+<caption><span class="figno tabno"></span>Long-range pairwise patterns.</caption>
+</table></div>
+
+<div class="tblwrap" id="tab:higher-order" data-kind="tab"><table>
+<thead><tr><th>Pattern</th><th>Tool / database</th><th>What you do for $(x,i)$</th><th>Constraint on $y$</th></tr></thead>
+<tbody>
+<tr><td style="white-space:normal">Sectors</td><td>pySCA <a class="cite" data-ref="ref-c34">[34]</a>; concept from Halabi et al. <a class="cite" data-ref="ref-c35">[35]</a></td><td>Is $i$ in a sector, and which positions share it?</td><td>A joint constraint across sector positions, not a simple allowed set</td></tr>
+<tr><td style="white-space:normal">Measured epistasis</td><td>ProteinGym DMS data <a class="cite" data-ref="ref-c36">[36]</a></td><td>Look up single and double mutants involving $i$</td><td>Empirical tolerance at $i$ and its context dependence</td></tr>
+</tbody>
+<caption><span class="figno tabno"></span>Higher-order patterns.</caption>
+</table></div>
+
+<!-- ============================================================ -->
+<h2 id="sec:improvements">What the extra structure buys us</h2>
+
+<p>These patterns provide a large corpus of possible modes in the data, each in a biologically motivated manner. This extra structure leads to the following improvements over the LLM setting.</p>
+
+<p><span class="circ">1</span>Compute a susceptibility matrix using per token susceptibilities as in <a class="cite" data-ref="ref-Gor26">[Gor26]</a> and cluster as described there (<a class="p1ref" href="../slt-susceptibilities/#sec:spectroscopy" data-ref="p2-clustering">Part 2, Section 6.2</a>). A given cluster corresponds to a particular $\alpha$–$\beta$ mode. Concretely, for a given cluster we have pairs $(x,y)$ where $x$ is a masked sequence and $y$ is the amino acid in the masked positions. We can ascribe meaning to the cluster by querying the corpus described above (<a class="ref" data-ref="sec:corpus"></a>) for matches. This would be a biologically motivated means of annotation.</p>
+
+<p><span class="circ">2</span>For a given pattern in the corpus above, compute per pattern susceptibilities as described in Appendix B.4 of <a class="cite" data-ref="ref-Gor26">[Gor26]</a>, following <a class="cite" data-ref="ref-Emb">[Emb]</a>. Concretely,</p>
+<div class="eq" id="eq:per-pattern">$$\hat\chi(P)=\frac{1}{|P|}\sum_{(x,y)\in P}\chi_{xy},$$</div>
+<p>where $P$ is formed by sampling $(x,y)$ from the corpus above.</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:experiments">Experiments</h2>
+
+<h3 id="sec:exp1">Experiment 1</h3>
+
+<p>We first consider ESM-8M.</p>
+
+<p><span class="circ">1</span>Draw 50k protein sequences from UniRef50, by first clustering sequences that match up to 80% identity and sampling 1 sequence per cluster (same procedure as detailed in <a class="cite" data-ref="ref-IPLM">[IPLM]</a> and <a class="cite" data-ref="ref-Set26">[Set26]</a>). Then generate samples $(x,y)$ by masking a single position for each sequence to get a pair $(x,y)$. Compute</p>
+<div class="eq" id="eq:chi-matrix">$$\chi^{(\ell)}_{ij}=\chi^{C_j}_{(x_i,y_i)},\qquad \ell\in\{1,\dots,6\}\ \text{(layers)},\quad j\in\{1,\dots,20\}\ \text{(attention heads)} .$$</div>
+
+<p><span class="circ">2</span>Cluster using the same procedure as <a class="cite" data-ref="ref-Gor26">[Gor26]</a>.</p>
+
+<p><span class="circ">3</span>For each cluster $i$, assemble pairs $(x,y)$ in the cluster and search the corpus above (<a class="ref" data-ref="sec:corpus"></a>) for matching patterns.</p>
+
+<h3 id="sec:expected">Expected results</h3>
+
+<p><strong>Attention heads and contact maps.</strong></p>
+<ul>
+<li><a class="cite" data-ref="ref-Rao21">[Rao21]</a> find that attention heads of ESM-1b encode contact maps, i.e. whether the residue at position $i$ is close to residue $j$ in the folded structure.</li>
+<li><a class="cite" data-ref="ref-Set26">[Set26]</a>: ablation of SAE features correlates with changes in attention maps.</li>
+<li>Cleanest probes should be ones where $x_i$ and $x_j$ covary despite $|j-i|$ being large. This is precisely the structural contacts row of <a class="ref" data-ref="tab:pairwise"></a>, together with the coevolutionary couplings row underneath it.</li>
+</ul>
+
+<p><strong>Secondary structure motifs</strong> like $\alpha$-helices, $\beta$-sheets etc.</p>
+<ul>
+<li><a class="cite" data-ref="ref-Set26">[Set26]</a> find SAE features that activate on localized secondary structure such as $\alpha$-helices or $\beta$-sheets across protein families.</li>
+<li>Cleanest probes would be ones predicted by DSSP <a class="cite" data-ref="ref-c8">[8]</a>, i.e. the secondary structure state row of <a class="ref" data-ref="tab:periodic"></a>.</li>
+</ul>
+
+<p><strong>Comparison to SAE features.</strong></p>
+<ul>
+<li>Pretrained SAEs available with residue level geometric annotation <a class="cite" data-ref="ref-Set26">[Set26]</a>.</li>
+</ul>
+
+<p>Are clusters that cannot be explained by one of the patterns in the corpus biologically meaningful? Novel insights?</p>
+
+<h3 id="sec:exp2">Experiment 2</h3>
+
+<p>Compute per pattern susceptibilities (<a class="ref" data-ref="eq:per-pattern"></a>) using patterns from the corpus. Agreement with the clusters?</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:safety">Safety implications</h2>
+
+<h3 id="sec:mitigation">A more robust mitigation strategy using susceptibilities</h3>
+
+<p><span class="circ">1</span><strong>Most direct.</strong> Define patterns from the filtered set (or a proxy for this) and compute $\hat\chi(P)$. High susceptibility indicates the model recognizes this pattern and warrants further investigation.</p>
+
+<div class="callout rem" id="rem:innocuous" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">$\hat\chi(P)$ can be high for innocuous reasons</span></div>
+<p>$\hat\chi(P)$ might be high for innocuous reasons: harmful viral proteins and innocent proteins might both have things like $\alpha$-helices.</p>
+</div>
+
+<p><span class="circ">2</span>To control for <a class="ref" data-ref="rem:innocuous"></a> we need more refined tests. Concretely, a model that has learned underlying generic machinery like $\alpha$-helix, $\beta$-sheet and other patterns would still respond to harmful proteins, as they contain these same patterns. We need to check for dedicated structure, i.e. for a harmful protein sequence $(x,y)$ we have the propensity profile $\{s_{\alpha\beta}(xy)\}_{\alpha\beta}$. A model will still respond to the modes that are generic capabilities but fail to respond to more specific modes. So, if we assume (and this is a strong assumption, though hopefully mitigated by sparsity of propensity profiles, <a class="p1ref" href="../slt-susceptibilities/#rem:sparse" data-ref="p2-rem-sparse">Part 2, Section 5.5, Remark 8</a>) that generic capability patterns are enumerated by the patterns in the corpus, we can regress</p>
+<div class="eq" id="eq:regression">$$\hat\chi(P_{\text{harmful}})\approx\sum_k c_k\,\hat\chi(P_k)$$</div>
+<p>and look at the residual. If the harmful capability has been removed, then $\hat\chi(P_{\text{harmful}})$ lies in the span of the generic modes. Else, it is in a component orthogonal to that span, and the residual tells us which component is responsible.</p>
+
+<p>Even if our corpus is incomplete, running the regression gives us a better idea of where the capability is hiding. We can look at the complement.</p>
+
+<p><span class="circ">3</span><strong>More refined tests.</strong> We can refine further in multiple ways. For example, if we know a harmful protein has a position with a buried helix, we can compare it with benign ones with buried helices.</p>
+
+<h3 id="sec:conductance">Conductance tests</h3>
+
+<p>Fine-tune a model on harmful material and measure how the clusters move. This is directly analogous to Section 4.5 of <a class="cite" data-ref="ref-Gor26">[Gor26]</a>, where they define clusters in Pythia-14M and measure their conductance under the susceptibility geometry of models up to 1.4B. Here we define clusters in the filtered model and measure their conductance under the fine-tuned model's geometry, asking whether it stays below what we would expect for a random set of probes of the same size.</p>
+
+<h3 id="sec:devinterp">Developmental interpretability</h3>
+
+<p>We can checkpoint across training or finetuning and track if and when capabilities emerge, following the framework outlined in <a class="cite" data-ref="ref-Emb">[Emb]</a>.</p>
+
+<p><strong>Practical value:</strong> monitor during training for emergence of dangerous capabilities, rather than a post-hoc check.</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:extensions">Extensions</h2>
+
+<p><a class="cite" data-ref="ref-WM26">[WM26]</a> introduce patterning, which inverts the structural inference framework to find data interventions to produce desired structural changes in model internals, e.g. suppression of harmful capabilities.</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:compute">Compute estimates</h2>
+
+<p class="disclaimer">This is a rough compute estimate that I asked Claude to estimate using the figures in Gordon 26 and Setlur 26.</p>
+
+<p>Two things anchor these numbers. <a class="cite" data-ref="ref-Gor26">[Gor26, Appendix A.2]</a> gives the SGLD settings its susceptibility runs actually used, and <a class="cite" data-ref="ref-Set26">[Set26, Appendix A.3]</a> gives measured A100 times for putting ESM-2 8M over exactly the kind of corpus Experiment 1 needs. Everything below is quoted in hours on a single A100-SXM4-80GB, the card used in <a class="cite" data-ref="ref-Set26">[Set26]</a>.</p>
+
+<h3 id="sec:cost-model">Where the compute goes</h3>
+
+<p>The susceptibility matrix of <a class="ref" data-ref="eq:chi-matrix"></a> costs three things.</p>
+
+<p><span class="circ">1</span><strong>Sampling.</strong> Run pSGLD to get draws of $w$ from the tempered posterior. <a class="cite" data-ref="ref-Gor26">[Gor26, Table 5]</a> uses, for Pythia-14M, 4 chains, 100 draws per chain, 55 steps between draws, gradient batch 16, $\eps=10^{-5}$, $\gamma=300$ and $n\beta=3$. That is 5,500 steps per chain, 22,000 steps in all, and 400 draws of $w$.</p>
+
+<p><span class="circ">2</span><strong>Per sample losses.</strong> For every retained draw $w_t$, evaluate $\lxy(w_t)$ on every pair. This is the term that dominates, and what it costs depends on how many pairs one forward pass yields.</p>
+
+<p><span class="circ">3</span><strong>Observables.</strong> For every draw and every component $C$, evaluate $\phi_C$ of <a class="ref" data-ref="eq:phiC"></a> on a fixed evaluation batch. ESM-8M has $6\times20=120$ attention heads, against 32 components for Pythia-14M.</p>
+
+<h3 id="sec:pairs">How many pairs 50,000 proteins give</h3>
+
+<p>The 780,000 of <a class="cite" data-ref="ref-Gor26">[Gor26]</a> is 13 Pile subsets at 60,000 sequences each, one pair per sequence, so their row count carries no multiplier over positions. But <a class="cite" data-ref="ref-Bak25">[Bak25, Appendix C.4]</a> does take the multiplier: 160 contexts at 1,023 positions gives 163,680 samples from 160 forward passes, because causal masking hands you the loss at every position of a sequence in one pass.</p>
+
+<p>The analogue here is to move the mask. For a sequence $x$, mask position $i$ and we have one pair; mask a different position of the same $x$ and we have a different sample; and so on. Taking about 20 choices of masked residue for each of the 50,000 sequences gives on the order of $10^6$ pairs, the same order as <a class="cite" data-ref="ref-Gor26">[Gor26]</a>. The ceiling is the $50{,}000\times240\approx1.2\times10^7$ maskable positions in the corpus.</p>
+
+<p>A masked model does not get these for free the way a causal one does. Moving the mask changes $x$, so $N$ pairs costs $N$ forward passes and term ② is linear in the number of pairs.</p>
+
+<p>The unit cost is one forward pass. ESM-2 8M has about $7.4\times10^6$ non-embedding parameters, so roughly $1.5\times10^7$ FLOPs per residue and about $4\times10^9$ FLOPs for a 240 residue pass (the corpus averages 240 residues, from Table 6 of <a class="cite" data-ref="ref-Set26">[Set26]</a>, whose corpus is the same size). A million pairs at 400 draws is then about $1.6\times10^{18}$ FLOPs.</p>
+
+<p>The draws are shared across components. The expectation $\langle-\rangle_\beta$ is over the full tempered posterior, and a component enters only through the observable, so one campaign of 400 draws serves all 120 heads: $\phi_C(w_t)$ is obtained by splicing $C$'s coordinates from $w_t$ into $\ws$ and evaluating $L$ there. Nothing in the pipeline has to be repeated per head.</p>
+
+<h3 id="sec:budget">The budget</h3>
+
+<div class="tblwrap" id="tab:budget" data-kind="tab"><table>
+<thead><tr><th>Step</th><th>A100-hours</th><th>Basis</th></tr></thead>
+<tbody>
+<tr><td style="white-space:normal">pSGLD sampling, term ①</td><td>&lt; 1</td><td>22,000 steps at batch 16, forward and backward</td></tr>
+<tr><td style="white-space:normal">Per sample losses, term ②</td><td>7–15</td><td>400 draws $\times$ $10^6$ pairs, $1.6\times10^{18}$ FLOPs, at 10–20% of the card's bf16 peak</td></tr>
+<tr><td style="white-space:normal">Observables, term ③</td><td>1–2</td><td>400 draws $\times$ 120 heads on a 50k residue evaluation batch</td></tr>
+<tr><td style="white-space:normal"><strong>Experiment 1 matrix</strong> (<a class="ref" data-ref="sec:exp1"></a>)</td><td><strong>9–18</strong></td><td></td></tr>
+<tr><td style="white-space:normal">Clustering</td><td>CPU only</td><td>$X$ is $10^6$ rows by 120 columns, about 480 MB in float32; personalized PageRank, whose cost does not grow with the number of points <a class="cite" data-ref="ref-Gor26">[Gor26, Appendix A.1]</a></td></tr>
+<tr><td style="white-space:normal">Corpus annotation (<a class="ref" data-ref="sec:corpus"></a>)</td><td>300–1,000 CPU-hours</td><td>scaled from the 105 CPU-hours per layer of <a class="cite" data-ref="ref-Set26">[Set26]</a>; the MSA and coupling rows of <a class="ref" data-ref="tab:pairwise"></a> are nearly all of it</td></tr>
+<tr><td style="white-space:normal">Experiment 2 (<a class="ref" data-ref="sec:exp2"></a>)</td><td>0</td><td>$\hat\chi(P)$ is a mean over the $\chi_{xy}$ already computed</td></tr>
+<tr><td style="white-space:normal">Conductance test (<a class="ref" data-ref="sec:conductance"></a>)</td><td>20–40</td><td>fine-tuning, plus a second matrix under the fine-tuned model</td></tr>
+<tr><td style="white-space:normal">Developmental run (<a class="ref" data-ref="sec:devinterp"></a>), 10 checkpoints</td><td>90–180</td><td>Experiment 1 once per checkpoint</td></tr>
+<tr><td style="white-space:normal">The same at the 650M scale</td><td>250–450</td><td>88$\times$ the parameters and 660 components, better utilised, at the same $10^6$ pairs</td></tr>
+</tbody>
+<caption><span class="figno tabno"></span>Estimated cost of the proposal at the 8M scale, in hours on one A100-SXM4-80GB unless stated otherwise.</caption>
+</table></div>
+
+<p>So Experiments 1 and 2 at the 8M scale come to <strong>under 20 A100-hours</strong>, and term ② scales with the number of masked positions per protein: 10 choices instead of 20 halves it. The CPU side of the corpus annotation is the larger inconvenience.</p>
+
+<h3 id="sec:sanity">Two sanity checks</h3>
+
+<p><span class="circ">1</span><a class="cite" data-ref="ref-Bak25">[Bak25, Appendix C.4]</a> computed per-token susceptibilities for a 3M parameter model on a single TPU v4 in 3 hours. ESM-8M is about twice that model and our corpus is small, so a few A100-hours for the same object is the right order.</p>
+
+<p><span class="circ">2</span><a class="cite" data-ref="ref-Gor26">[Gor26, Appendix A.3]</a> ran Pythia-14M on 4 nodes of 4 H200s each, within 5 days of wall-clock, and states that exact GPU-hours were not logged. That is an upper bound of about 1,900 H200-hours, but for 780,000 samples rather than 50,000, so it does not contradict the estimate above; it only means the published run is not a tight anchor.</p>
+
+<div class="callout rem" id="rem:compute-assumptions" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">what is assumed rather than read off</span></div>
+<p>The SGLD settings, the component counts, the corpus size and the A100 times are all taken from the two papers. Assumed here: that ESM-8M holds 10–20% of the card's bf16 peak, which is where a 7M parameter model on 240 token sequences tends to sit; that the SGLD settings of Pythia-14M carry over unchanged, which is the thing to tune first; that the evaluation batch for $L$ is 50k residues; and that the corpus annotation scales from the CPU hours in <a class="cite" data-ref="ref-Set26">[Set26]</a>.</p>
+</div>
+
+<p class="next">Back to <a href="../slt-susceptibilities/">Part 2: Empirical SLT: LLC Estimation, Susceptibilities, and Structural Inference</a>.</p>
+
+<!-- ============================================================ -->
+<h2 id="sec:references">References</h2>
+<ol class="refs">
+<li id="ref-Bak25" class="ref-target"><span class="key">[Bak25]</span><span>G. Baker, G. Wang, J. Hoogland, D. Murfet. Structural Inference: Interpreting Small Language Models with Susceptibilities. <a href="https://arxiv.org/abs/2504.18274">arXiv:2504.18274</a>, 2025 (ICLR 2026). <span class="note">Susceptibilities, the observable $\phi_C$, per-token susceptibilities.</span></span></li>
+<li id="ref-Gor26" class="ref-target"><span class="key">[Gor26]</span><span>A. Gordon, G. Baker, G. Wang, W. Snell, S. van Wingerden, D. Murfet. Towards Spectroscopy: Susceptibility Clusters in Language Models. <a href="https://arxiv.org/abs/2601.12703">arXiv:2601.12703</a>, 2026. <span class="note">Token and modes bases, propensities, clustering on Pythia-14M, per-pattern susceptibilities, conductance.</span></span></li>
+<li id="ref-CM25" class="ref-target"><span class="key">[CM25]</span><span>Z. Chen, D. Murfet. Modes of Sequence Models and Learning Coefficients. <a href="https://arxiv.org/abs/2504.18048">arXiv:2504.18048</a>, 2025. <span class="note">The framework of modes: SVD of the conditional distribution.</span></span></li>
+<li id="ref-Lin23" class="ref-target"><span class="key">[Lin23]</span><span>Z. Lin, H. Akin, R. Rao, B. Hie, … A. Rives. Evolutionary-scale prediction of atomic-level protein structure with a language model. <em>Science</em> 379(6637), 1123–1130 (2023). <span class="note">ESM-2 and ESMFold; reference [3] of <a class="cite" data-ref="ref-Set26">[Set26]</a>.</span></span></li>
+<li id="ref-Che25" class="ref-target"><span class="key">[Che25]</span><span>J.-Y. Chen, J.-F. Wang, Y. Hu, X.-H. Li, Y.-R. Qian, C.-L. Song. Evaluating the advancements in protein language models for encoding strategies in protein function prediction: a comprehensive review. <em>Frontiers in Bioengineering and Biotechnology</em> 13, 1506508 (2025). <span class="note">Reference [4] of <a class="cite" data-ref="ref-Set26">[Set26]</a>.</span></span></li>
+<li id="ref-Fla24" class="ref-target"><span class="key">[Fla24]</span><span>Z. N. Flamholz, S. J. Biller, L. Kelly. Large language models improve annotation of prokaryotic viral proteins. <em>Nature Microbiology</em> 9(2), 537–549 (2024). <span class="note">Reference [6] of <a class="cite" data-ref="ref-Set26">[Set26]</a>.</span></span></li>
+<li id="ref-Thu25" class="ref-target"><span class="key">[Thu25]</span><span>K. Thurimella et al. Protein language models uncover carbohydrate-active enzyme function in metagenomics. <em>BMC Bioinformatics</em> 26(1), 285 (2025). <span class="note">Reference [7] of <a class="cite" data-ref="ref-Set26">[Set26]</a>.</span></span></li>
+<li id="ref-Good25" class="ref-target"><span class="key">[Good25]</span><span>M. Pearce, E. Simon, M. Byun, D. Balsam. Finding the Tree of Life in Evo 2. <em>Goodfire Research</em>, 27 August 2025. <a href="https://www.goodfire.com/research/phylogeny-manifold">goodfire.com</a> <span class="note">Phylogeny encoded as a curved manifold in Evo 2's activations; an internal representation read for a biological insight.</span></span></li>
+<li id="ref-Hay25" class="ref-target"><span class="key">[Hay25]</span><span>T. Hayes, R. Rao, H. Akin, … A. Rives. Simulating 500 million years of evolution with a language model. <em>Science</em> 387(6736), 850–858 (2025). <span class="note">ESM3. Appendix A.6.1 describes the denylists and the removal of 10.6M sequences from the pretraining corpus.</span></span></li>
+<li id="ref-Bri26" class="ref-target"><span class="key">[Bri26]</span><span>G. Brixi, M. G. Durrant, J. Ku, et al. Genome modelling and design across all domains of life with Evo 2. <em>Nature</em> 652(8112), 1349–1361 (2026). <span class="note">Excludes eukaryote-infecting viral genomes from pretraining and verifies high perplexity on them afterwards.</span></span></li>
+<li id="ref-IPLM" class="ref-target"><span class="key">[IPLM]</span><span>E. Simon, J. Zou. InterPLM: discovering interpretable features in protein language models via sparse autoencoders. <em>Nature Methods</em> 22, 2107–2117 (2025). <span class="note">SAEs on ESM-2; the UniRef50 sampling procedure.</span></span></li>
+<li id="ref-Rao21" class="ref-target"><span class="key">[Rao21]</span><span>R. Rao, J. Meier, T. Sercu, S. Ovchinnikov, A. Rives. Transformer protein language models are unsupervised structure learners. <em>ICLR</em> 2021. <a href="https://doi.org/10.1101/2020.12.15.422761">bioRxiv:2020.12.15.422761</a>. <span class="note">Attention heads of ESM-1b encode contact maps.</span></span></li>
+<li id="ref-Anf73" class="ref-target"><span class="key">[Anf73]</span><span>C. B. Anfinsen. Principles that Govern the Folding of Protein Chains. <em>Science</em> 181(4096), 223–230 (1973).</span></li>
+<li id="ref-UniRef" class="ref-target"><span class="key">[UniRef]</span><span>B. E. Suzek, Y. Wang, H. Huang, P. B. McGarvey, C. H. Wu, and the UniProt Consortium. UniRef clusters: a comprehensive and scalable alternative for improving sequence similarity searches. <em>Bioinformatics</em> 31(6), 926–932 (2015). <span class="note">UniRef50; the original UniRef paper is Suzek et al., <em>Bioinformatics</em> 23(10), 1282–1288 (2007).</span></span></li>
+<li id="ref-AF2" class="ref-target"><span class="key">[AF2]</span><span>J. Jumper et al. Highly accurate protein structure prediction with AlphaFold. <em>Nature</em> 596, 583–589 (2021). <span class="note">Same as corpus reference <a class="cite" data-ref="ref-c7">[7]</a>.</span></span></li>
+<li id="ref-Gob94" class="ref-target"><span class="key">[Göb94]</span><span>U. Göbel, C. Sander, R. Schneider, A. Valencia. Correlated mutations and residue contacts in proteins. <em>Proteins</em> 18(4), 309–317 (1994).</span></li>
+<li id="ref-Mor11" class="ref-target"><span class="key">[Mor11]</span><span>F. Morcos, A. Pagnani, B. Lunt, et al. Direct-coupling analysis of residue coevolution captures native contacts across many protein families. <em>PNAS</em> 108(49), E1293–E1301 (2011). <span class="note">The Potts model / direct coupling analysis that goes beyond pairwise correlation.</span></span></li>
+<li id="ref-Emb" class="ref-target"><span class="key">[Emb]</span><span>G. Wang, G. Baker, A. Gordon, D. Murfet. Embryology of a Language Model. <a href="https://arxiv.org/abs/2508.00331">arXiv:2508.00331</a>, 2025. <span class="note">Tracking when structure emerges over training; also the source of the per-pattern susceptibility $\hat\chi(P)$ that <a class="cite" data-ref="ref-Gor26">[Gor26, Appendix B.4]</a> restates.</span></span></li>
+<li id="ref-WM26" class="ref-target"><span class="key">[WM26]</span><span>G. Wang, D. Murfet. Patterning: The Dual of Interpretability. <a href="https://arxiv.org/abs/2601.13548">arXiv:2601.13548</a>, 2026.</span></li>
+<li id="ref-Set26" class="ref-target"><span class="key">[Set26]</span><span>S. Setlur, D. Mihajlovic, D. Lee. Interpreting Latent Protein Language Model Features with Geometric Annotations. <a href="https://arxiv.org/abs/2608.26419">arXiv:2608.26419</a>, 2026. <span class="note">SAEs on ESM-2 8M, residue-level geometric annotation, feature ablations and contact maps.</span></span></li>
+</ol>
+
+<h3 id="sec:corpus-refs">References for the corpus of patterns</h3>
+<ol class="refs">
+<li id="ref-c1" class="ref-target"><span class="key">[1]</span><span>C. J. A. Sigrist et al. New and continuing developments at PROSITE. <em>Nucleic Acids Res.</em> 41, D344–D347 (2013).</span></li>
+<li id="ref-c2" class="ref-target"><span class="key">[2]</span><span>E. de Castro et al. ScanProsite: detection of PROSITE signature matches and ProRule-associated functional and structural residues in proteins. <em>Nucleic Acids Res.</em> 34, W362–W365 (2006).</span></li>
+<li id="ref-c3" class="ref-target"><span class="key">[3]</span><span>J. E. Walker, M. Saraste, M. J. Runswick, N. J. Gay. Distantly related sequences in the $\alpha$- and $\beta$-subunits of ATP synthase, myosin, kinases and other ATP-requiring enzymes and a common nucleotide binding fold. <em>EMBO J.</em> 1, 945–951 (1982).</span></li>
+<li id="ref-c4" class="ref-target"><span class="key">[4]</span><span>M. Kumar et al. ELM—the Eukaryotic Linear Motif resource—2024 update. <em>Nucleic Acids Res.</em> 52, D442–D455 (2024).</span></li>
+<li id="ref-c5" class="ref-target"><span class="key">[5]</span><span>W. P. Russ, D. M. Engelman. The GxxxG motif: a framework for transmembrane helix–helix association. <em>J. Mol. Biol.</em> 296, 911–919 (2000).</span></li>
+<li id="ref-c6" class="ref-target"><span class="key">[6]</span><span>M. Varadi et al. AlphaFold Protein Structure Database: massively expanding the structural coverage of protein-sequence space with high-accuracy models. <em>Nucleic Acids Res.</em> 50, D439–D444 (2022).</span></li>
+<li id="ref-c7" class="ref-target"><span class="key">[7]</span><span>J. Jumper et al. Highly accurate protein structure prediction with AlphaFold. <em>Nature</em> 596, 583–589 (2021).</span></li>
+<li id="ref-c8" class="ref-target"><span class="key">[8]</span><span>W. Kabsch, C. Sander. Dictionary of protein secondary structure: pattern recognition of hydrogen-bonded and geometrical features. <em>Biopolymers</em> 22, 2577–2637 (1983).</span></li>
+<li id="ref-c9" class="ref-target"><span class="key">[9]</span><span>J. M. Dana et al. SIFTS: updated Structure Integration with Function, Taxonomy and Sequences resource. <em>Nucleic Acids Res.</em> 47, D482–D489 (2019).</span></li>
+<li id="ref-c10" class="ref-target"><span class="key">[10]</span><span>C. N. Pace, J. M. Scholtz. A helix propensity scale based on experimental studies of peptides and proteins. <em>Biophys. J.</em> 75, 422–427 (1998).</span></li>
+<li id="ref-c11" class="ref-target"><span class="key">[11]</span><span>M. Z. Tien et al. Maximum allowed solvent accessibilites of residues in proteins. <em>PLoS ONE</em> 8, e80635 (2013).</span></li>
+<li id="ref-c12" class="ref-target"><span class="key">[12]</span><span>D. Eisenberg, R. M. Weiss, T. C. Terwilliger. The helical hydrophobic moment: a measure of the amphiphilicity of a helix. <em>Nature</em> 299, 371–374 (1982).</span></li>
+<li id="ref-c13" class="ref-target"><span class="key">[13]</span><span>A. Lupas, M. Van Dyke, J. Stock. Predicting coiled coils from protein sequences. <em>Science</em> 252, 1162–1164 (1991).</span></li>
+<li id="ref-c14" class="ref-target"><span class="key">[14]</span><span>J. Walshaw, D. N. Woolfson. SOCKET: a program for identifying and analysing coiled-coil motifs within protein structures. <em>J. Mol. Biol.</em> 307, 1427–1450 (2001).</span></li>
+<li id="ref-c15" class="ref-target"><span class="key">[15]</span><span>O. D. Testa, E. Moutevelis, D. N. Woolfson. CC+: a relational database of coiled-coil structures. <em>Nucleic Acids Res.</em> 37, D315–D322 (2009).</span></li>
+<li id="ref-c16" class="ref-target"><span class="key">[16]</span><span>The UniProt Consortium. UniProt: the Universal Protein Knowledgebase (cite the current annual <em>Nucleic Acids Res.</em> database issue update).</span></li>
+<li id="ref-c17" class="ref-target"><span class="key">[17]</span><span>D. Kozma, I. Simon, G. E. Tusnády. PDBTM: Protein Data Bank of transmembrane proteins after 8 years. <em>Nucleic Acids Res.</em> 41, D524–D529 (2013).</span></li>
+<li id="ref-c18" class="ref-target"><span class="key">[18]</span><span>M. A. Lomize et al. OPM database and PPM web server: resources for positioning of proteins in membranes. <em>Nucleic Acids Res.</em> 40, D370–D376 (2012).</span></li>
+<li id="ref-c19" class="ref-target"><span class="key">[19]</span><span>A. Krogh et al. Predicting transmembrane protein topology with a hidden Markov model: application to complete genomes. <em>J. Mol. Biol.</em> 305, 567–580 (2001).</span></li>
+<li id="ref-c20" class="ref-target"><span class="key">[20]</span><span>L. Käll, A. Krogh, E. L. L. Sonnhammer. A combined transmembrane topology and signal peptide prediction method. <em>J. Mol. Biol.</em> 338, 1027–1036 (2004).</span></li>
+<li id="ref-c21" class="ref-target"><span class="key">[21]</span><span>T. N. Petersen et al. SignalP 4.0: discriminating signal peptides from transmembrane regions. <em>Nat. Methods</em> 8, 785–786 (2011).</span></li>
+<li id="ref-c22" class="ref-target"><span class="key">[22]</span><span>G. von Heijne. Signal sequences: the limits of variation. <em>J. Mol. Biol.</em> 184, 99–105 (1985).</span></li>
+<li id="ref-c23" class="ref-target"><span class="key">[23]</span><span>M. C. Aspromonte et al. DisProt in 2024: improving function annotation of intrinsically disordered proteins. <em>Nucleic Acids Res.</em> 52, D434–D441 (2024).</span></li>
+<li id="ref-c24" class="ref-target"><span class="key">[24]</span><span>D. Piovesan et al. MobiDB: 10 years of intrinsically disordered proteins. <em>Nucleic Acids Res.</em> 51, D438–D444 (2023).</span></li>
+<li id="ref-c25" class="ref-target"><span class="key">[25]</span><span>G. Erdős, M. Pajkos, Z. Dosztányi. IUPred3: prediction of protein disorder enhanced with unambiguous experimental annotation and visualization of evolutionary conservation. <em>Nucleic Acids Res.</em> 49, W297–W303 (2021).</span></li>
+<li id="ref-c26" class="ref-target"><span class="key">[26]</span><span>K. M. Ruff, R. V. Pappu. AlphaFold and implications for intrinsically disordered proteins. <em>J. Mol. Biol.</em> 433, 167208 (2021).</span></li>
+<li id="ref-c27" class="ref-target"><span class="key">[27]</span><span>J. C. Wootton, S. Federhen. Statistics of local complexity in amino acid sequences and sequence databases. <em>Comput. Chem.</em> 17, 149–163 (1993).</span></li>
+<li id="ref-c28" class="ref-target"><span class="key">[28]</span><span>S. R. Eddy. Accelerated profile HMM searches. <em>PLoS Comput. Biol.</em> 7, e1002195 (2011).</span></li>
+<li id="ref-c29" class="ref-target"><span class="key">[29]</span><span>J. Mistry et al. Pfam: the protein families database in 2021. <em>Nucleic Acids Res.</em> 49, D412–D419 (2021).</span></li>
+<li id="ref-c30" class="ref-target"><span class="key">[30]</span><span>T. A. Hopf et al. The EVcouplings Python framework for coevolutionary sequence analysis. <em>Bioinformatics</em> 35, 1582–1584 (2019).</span></li>
+<li id="ref-c31" class="ref-target"><span class="key">[31]</span><span>S. Seemayer, M. Gruber, J. Söding. CCMpred—fast and precise prediction of protein residue–residue contacts from correlated mutations. <em>Bioinformatics</em> 30, 3128–3130 (2014).</span></li>
+<li id="ref-c32" class="ref-target"><span class="key">[32]</span><span>H. Kamisetty, S. Ovchinnikov, D. Baker. Assessing the utility of coevolution-based residue–residue contact predictions in a sequence- and structure-rich era. <em>PNAS</em> 110, 15674–15679 (2013).</span></li>
+<li id="ref-c33" class="ref-target"><span class="key">[33]</span><span>S. D. Dunn, L. M. Wahl, G. B. Gloor. Mutual information without the influence of phylogeny or entropy dramatically improves residue contact prediction. <em>Bioinformatics</em> 24, 333–340 (2008).</span></li>
+<li id="ref-c34" class="ref-target"><span class="key">[34]</span><span>O. Rivoire, K. A. Reynolds, R. Ranganathan. Evolution-based functional decomposition of proteins. <em>PLoS Comput. Biol.</em> 12, e1004817 (2016).</span></li>
+<li id="ref-c35" class="ref-target"><span class="key">[35]</span><span>N. Halabi et al. Protein sectors: evolutionary units of three-dimensional structure. <em>Cell</em> 138, 774–786 (2009).</span></li>
+<li id="ref-c36" class="ref-target"><span class="key">[36]</span><span>P. Notin et al. ProteinGym: large-scale benchmarks for protein fitness prediction and design. <em>NeurIPS Datasets and Benchmarks Track</em> (2023).</span></li>
+<li id="ref-c37" class="ref-target"><span class="key">[37]</span><span>D. W. A. Buchan, D. T. Jones. The PSIPRED Protein Analysis Workbench: 20 years on. <em>Nucleic Acids Res.</em> 47, W402–W407 (2019).</span></li>
+</ol>
+</main>
+</div>
+
+<!-- previews for links into Parts 1 and 2; kept off-screen so MathJax typesets them -->
+<div class="p1previews" aria-hidden="true">
+  <div id="p1-setup" data-label="Part 1 · Section 2 · The Learning Problem"><p>A learning problem is a triple $(p,q,\varphi)$: $p$ a model, a distribution on $X$ for each parameter setting; $q$ what we want to learn; $\varphi$ a prior, our best guess as to which $w\in W$ gives us the lowest loss.</p></div>
+  <div id="p2-def-chi" data-label="Part 2 · Section 3.3 · Definition 1"><p>The susceptibility of the observable $\phi$ to the perturbation $q_h=(1-h)q+hq'$ is the first order response</p><div class="eq nonum">$$\chi=\frac{1}{n\beta}\frac{\partial}{\partial h}\langle\phi\rangle_{\beta,h}\Big|_{h=0} .$$</div></div>
+  <div id="p2-def-per-token" data-label="Part 2 · Section 3.6 · Definition 4"><p>The per-token susceptibility of $C$ for $(x,y)\in X\times Y$ is</p><div class="eq nonum">$$\chi^C_{(x,y)}=-\Cov_\beta\big(\phi_C,\ \lxy(w)-L(w)\big),$$</div><p>where $\lxy(w)=-\log p(y|x,w)$.</p></div>
+  <div id="p2-def-phiC" data-label="Part 2 · Section 3.5 · Definition 3"><p>The observable attached to a component $C$, writing $W=U\times C$, is</p><div class="eq nonum">$$\phi_C(w)=\delta(u-\us)\big[L(w)-L(\ws)\big],$$</div><p>the population loss restricted to the slice where only the weights of $C$ move.</p></div>
+  <div id="p2-beta" data-label="Part 2 · Section 2.3 · Introducing $\beta$"><p>$\beta$ is the inverse temperature of the tempered posterior we sample from; the LLC estimator uses $\beta=1/\log n$.</p></div>
+  <div id="p2-svd" data-label="Part 2 · Section 5.3 · Equation (44)"><div class="eq nonum">$$\Cc=USV^\top=\sum_{\alpha\in\Lp}\tilde s_\alpha\,u_\alpha\circ\vh_\alpha$$</div><p>SVD of the conditional $\Cc$, expressed in the token basis: $u_\alpha$ are the continuation patterns and $\vh_\alpha$ the context patterns.</p></div>
+  <div id="p2-modes-basis" data-label="Part 2 · Section 5.3 · Equation (45)"><div class="eq nonum">$$e_{\alpha\beta}(x)(y)=\vh_\alpha(x)\,\langle u_\beta,y\rangle$$</div><p>This is called the modes basis.</p></div>
+  <div id="p2-def-propensity" data-label="Part 2 · Section 5.4 · Definition 6"><p>Propensities are the change of basis coefficients between the token and modes basis:</p><div class="eq nonum">$$s_{\alpha\beta}(xy):=\big\langle y\circ\xh,\ e_{\alpha\beta}\big\rangle_\Hil=e_{\alpha\beta}(x)(y).$$</div></div>
+  <div id="p2-int-excites" data-label="Part 2 · Section 5.4 · Intuition 12"><p>We say $(x,y)$ excites mode $\alpha$ if the diagonal term $s_{\alpha\alpha}(xy)$ dominates: the context $x$ is an $\alpha$ pattern, and $y$ is a continuation the $\alpha$ pattern predicts.</p></div>
+  <div id="p2-rem-sparse" data-label="Part 2 · Section 5.5 · Remark 8"><p>The decomposition is useful when the propensity profile of a sample $(x,y)$ is sparse: $x$ aligns with only a few context patterns, $y$ with a few continuation patterns, and the diagonal term dominates.</p></div>
+  <div id="p2-clustering" data-label="Part 2 · Section 6.2 · Towards spectroscopy"><p>They build $X_{ij}=\hat\chi^{C_j}_{(x_i,y_i)}$ over 780,000 samples and 32 attention heads, and cluster the rows of $X$. Samples whose propensity profiles agree elicit similar first order responses, so they land in the same cluster.</p></div>
+</div>
+<button id="backbtn" type="button">↩ back to where you were</button>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------------- numbering & cross references ---------------- */
+function number(){
+  // sections
+  let h2=0,h3=0; const toc=$('#toclist');
+  $$('main h2, main h3').forEach(h=>{
+    if(h.tagName==='H2'){h2++;h3=0;h.dataset.label=String(h2);}else{h3++;h.dataset.label=h2+'.'+h3;}
+    h.dataset.kind='sec';
+    const title=h.textContent.trim();
+    if(!h.querySelector('.num')){const s=document.createElement('span');s.className='num';s.textContent=h.dataset.label;h.prepend(s);}
+    if(!h.id){h.id='sec-'+h.dataset.label.replace('.','-');}
+    const li=document.createElement('li');li.className=h.tagName==='H2'?'l2':'l3';
+    const a=document.createElement('a');a.href='#'+h.id;a.textContent=title;a.dataset.target=h.id;li.appendChild(a);toc.appendChild(li);
+  });
+  // equations (numbered unless .nonum)
+  let n=0;
+  $$('main .eq').forEach(e=>{
+    if(e.classList.contains('nonum')||e.closest('.popover'))return;
+    n++;e.dataset.label='('+n+')';e.dataset.kind='eq';
+    if(!e.id)e.id='eq-'+n;
+    const a=document.createElement('a');a.className='eqno';a.href='#'+e.id;a.textContent='('+n+')';a.title='Link to this equation';e.appendChild(a);
+  });
+  // figures, tables, examples, definitions
+  const counters={};
+  const prefix={fig:'Figure',tab:'Table',ex:'Example',def:'Definition',rem:'Remark',der:'Derivation',lem:'Lemma',int:'Intuition',ahead:'Looking ahead',warn:'Caution'};
+  $$('main [data-kind]').forEach(el=>{
+    const k=el.dataset.kind; if(k==='sec'||k==='eq')return;
+    counters[k]=(counters[k]||0)+1; el.dataset.label=prefix[k]+' '+counters[k];
+    if(k==='fig'){const c=el.querySelector('figcaption');if(c){const s=document.createElement('span');s.className='figno';s.textContent='Figure '+counters[k];c.prepend(s);}}
+    if(k==='tab'){const s=el.querySelector('.tabno');if(s)s.textContent='Table '+counters[k]+' · ';}
+    if(k==='ex'){const t=el.querySelector('.kind');if(t)t.textContent='Example '+counters[k];}
+    if(k==='def'){const t=el.querySelector('.kind');if(t)t.textContent='Definition '+counters[k];}
+    if(k==='lem'){const t=el.querySelector('.kind');if(t)t.textContent='Lemma '+counters[k];}
+  });
+  // fill refs
+  $$('a.ref, a.cite').forEach(a=>{
+    const id=a.dataset.ref; const t=document.getElementById(id); if(!t){a.textContent=a.textContent||'??';return;}
+    a.href='#'+id;
+    if(!a.textContent.trim()){
+      const k=t.dataset.kind, lab=t.dataset.label||'';
+      a.textContent=k==='eq'?lab:k==='sec'?'Section '+lab:lab;
+    }
+  });
+}
+
+/* ---------------- hover previews ---------------- */
+let pop=null, popTimer=null;
+function showPop(a){
+  const t=document.getElementById(a.dataset.ref); if(!t)return;
+  hidePop();
+  pop=document.createElement('div');pop.className='popover';
+  const lab=document.createElement('div');lab.className='pop-label';
+  const k=t.dataset.kind;
+  lab.textContent=k==='eq'?'Equation '+t.dataset.label:k==='sec'?'Section '+t.dataset.label:(t.dataset.label||'Reference');
+  pop.appendChild(lab);
+  let clone;
+  if(k==='sec'){
+    // section: heading + first paragraph
+    clone=document.createElement('div');const h=t.cloneNode(true);h.querySelectorAll('.num').forEach(x=>x.remove());h.style.margin='0';h.style.border='0';h.style.padding='0';h.style.fontSize='1.1rem';clone.appendChild(h);
+    let nx=t.nextElementSibling; while(nx&&!(nx.tagName==='P'||nx.classList.contains('callout')||nx.classList.contains('eq')))nx=nx.nextElementSibling;
+    if(nx){const c=nx.cloneNode(true);c.style.maxHeight='140px';c.style.overflow='hidden';clone.appendChild(c);}
+  }else if(k==='fig'){
+    clone=t.cloneNode(true);
+  }else{
+    clone=t.cloneNode(true);
+  }
+  clone.removeAttribute('id');clone.classList.add('p1prev');clone.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+  clone.querySelectorAll('.eqno').forEach(x=>x.remove());
+  pop.appendChild(clone);
+  document.body.appendChild(pop);
+  const r=a.getBoundingClientRect(), pw=pop.offsetWidth, ph=pop.offsetHeight;
+  let left=window.scrollX+r.left, top=window.scrollY+r.bottom+8;
+  if(left+pw>window.scrollX+window.innerWidth-12)left=window.scrollX+window.innerWidth-12-pw;
+  if(r.bottom+8+ph>window.innerHeight&&r.top-ph-8>0)top=window.scrollY+r.top-ph-8;
+  pop.style.left=left+'px';pop.style.top=top+'px';
+}
+function hidePop(){if(pop){pop.remove();pop=null;}}
+function wireRefs(){
+  $$('a.ref, a.cite, a.p1ref').forEach(a=>{
+    a.addEventListener('mouseenter',()=>{clearTimeout(popTimer);popTimer=setTimeout(()=>showPop(a),120);});
+    a.addEventListener('mouseleave',()=>{clearTimeout(popTimer);hidePop();});
+    a.addEventListener('focus',()=>showPop(a)); a.addEventListener('blur',hidePop);
+    a.addEventListener('click',()=>{hidePop();if(!a.classList.contains('p1ref'))rememberPos();});
+  });
+  window.addEventListener('scroll',()=>{if(pop)hidePop();},{passive:true});
+}
+/* flash the target on hash navigation, open details if needed */
+function flashTarget(){
+  const id=decodeURIComponent(location.hash.slice(1)); if(!id)return;
+  const t=document.getElementById(id); if(!t)return;
+  const d=t.closest('details'); if(d&&!d.open){d.open=true;}
+  t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash');
+}
+window.addEventListener('hashchange',flashTarget);
+/* back button */
+let savedY=null; const backbtn=$('#backbtn');
+function rememberPos(){savedY=window.scrollY;backbtn.classList.add('show');}
+backbtn.addEventListener('click',()=>{if(savedY!=null){window.scrollTo({top:savedY,behavior:'smooth'});}backbtn.classList.remove('show');savedY=null;history.replaceState(null,'',location.pathname+location.search);});
+
+/* ---------------- toc highlighting ---------------- */
+function wireToc(){
+  const links=$$('#toclist a'); if(!links.length||!('IntersectionObserver' in window))return;
+  const map=new Map(links.map(a=>[a.dataset.target,a]));
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(en=>{if(en.isIntersecting){links.forEach(l=>l.classList.remove('active'));const a=map.get(en.target.id);if(a)a.classList.add('active');}});
+  },{rootMargin:'-10% 0px -80% 0px'});
+  $$('main h2, main h3').forEach(h=>obs.observe(h));
+}
+/* ---------------- derivation toggle ---------------- */
+function wireDer(){
+  const ds=$$('details.callout'); let open=false;
+  const upd=()=>{['#toggle-der','#toggle-der-2'].forEach(s=>{const b=$(s);if(b)b.textContent=open?'Collapse derivations':'Expand derivations';});};
+  ['#toggle-der','#toggle-der-2'].forEach(s=>{const b=$(s);if(b)b.addEventListener('click',()=>{open=!open;ds.forEach(d=>d.open=open);upd();});});
+}
+
+/* ---------------- figure helpers ---------------- */
+const colors=()=>({red:css('--red'),blue:css('--blue'),green:css('--green'),purple:css('--purple'),amber:css('--amber'),ink:css('--ink'),ink2:css('--ink-2'),ink3:css('--ink-3'),rule:css('--rule'),paper:css('--paper'),paper2:css('--paper-2')});
+function hexToRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return [(n>>16)&255,(n>>8)&255,n&255];}
+function svgEl(tag,attrs,parent){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+function fmt(x,d=3){return Number(x).toPrecision(d);}
+function rng(seed){let a=seed>>>0;const u=()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};return ()=>{const r=Math.sqrt(-2*Math.log(u()+1e-12));return r*Math.cos(2*Math.PI*u());};}
+
+/* keep a punctuation mark on the same line as the inline formula before it */
+function glue(){
+  $$('main mjx-container:not([display="true"])').forEach(m=>{const n=m.nextSibling;if(!n||n.nodeType!==3)return;const mt=n.textContent.match(/^[.,;:!?)]+/);if(!mt)return;const sp=document.createElement('span');sp.style.whiteSpace='nowrap';m.parentNode.insertBefore(sp,m);sp.appendChild(m);sp.appendChild(document.createTextNode(mt[0]));n.textContent=n.textContent.slice(mt[0].length);});
+}
+
+/* ---------------- boot ---------------- */
+function boot(){
+  number(); wireRefs(); wireToc(); wireDer();
+  const redraws=[];
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>redraws.forEach(f=>f()));
+  new MutationObserver(()=>redraws.forEach(f=>f())).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  glue();
+  if(location.hash)setTimeout(flashTarget,300);
+  // typeset any math inside labels of controls that MathJax may have missed
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise($$('.controls'));
+}
+if(window.MathJax&&MathJax.startup&&MathJax.startup.promise){MathJax.startup.promise.then(boot);}
+else{document.addEventListener('DOMContentLoaded',()=>{const wait=()=>{if(window.MathJax&&MathJax.startup&&MathJax.startup.promise)MathJax.startup.promise.then(boot);else setTimeout(wait,100);};wait();});}
+})();
+</script>
+</body>
+</html>
