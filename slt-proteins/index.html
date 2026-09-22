@@ -539,7 +539,15 @@ window.MathJax = {
 
 <p><span class="circ">1</span><a class="cite" data-ref="ref-Bak25">[Bak25, Appendix C.4]</a> computed per-token susceptibilities for a 3M parameter model on a single TPU v4 in 3 hours. ESM-8M is about twice that model and our corpus is small, so a few A100-hours for the same object is the right order.</p>
 
-<p><span class="circ">2</span><a class="cite" data-ref="ref-Gor26">[Gor26, Appendix A.3]</a> ran Pythia-14M on 4 nodes of 4 H200s each, within 5 days of wall-clock, and states that exact GPU-hours were not logged. That is an upper bound of about 1,900 H200-hours, but for 780,000 samples rather than 50,000, so it does not contradict the estimate above; it only means the published run is not a tight anchor.</p>
+<p><span class="circ">2</span><a class="cite" data-ref="ref-Gor26">[Gor26, Appendix A.3]</a> ran Pythia-14M on 4 nodes of 4 H200s each, within 5 days of wall-clock, and states that exact GPU-hours were not logged. Taken at face value that is a ceiling of about 1,900 H200-hours, for a job with the same order of pairs as ours, and it sits two orders of magnitude above the estimate. The ceiling is an allocation rather than a measurement: five days times every card allocated, for a run that also covers the clustering, the UMAP, the SAE comparison and the $n\beta=0$ rerun. Two things do make their cost per pair genuinely higher, namely a context length they do not state (1,024 in the predecessor) against our 240 residues, and a 50,304 token vocabulary whose output projection costs about as much again as the whole 14M body, where ESM's 33 tokens cost nothing. Still, this is the looser of the two checks, and if the estimate here is wrong in either direction, this is the number that says so.</p>
+
+<h3 id="sec:ask">What to ask for</h3>
+
+<p>Totalling the table at the 8M scale, Experiments 1 and 2, the conductance test and a ten checkpoint developmental run come to <strong>120–240 A100-hours</strong> for one clean pass of each.</p>
+
+<p>That is a floor in one specific way. It prices a single run with the SGLD settings of <a class="cite" data-ref="ref-Gor26">[Gor26]</a> transplanted unchanged, and $\eps$, $\gamma$ and $n\beta$ will need tuning for ESM, which is the first thing to do and the thing most likely to be repeated. At three to five rounds of that, the 8M programme is <strong>400–1,200 A100-hours</strong>.</p>
+
+<p>So 1,000 A100-hours covers the 8M programme with room to tune, and one susceptibility run at 650M on top if the tuning goes well. It does not cover a developmental sweep at 650M, which is 2,500–4,500 on its own. If 650M is in scope from the start, ask for 2,500.</p>
 
 <div class="callout rem" id="rem:compute-assumptions" data-kind="rem"><div class="head"><span class="kind">Remark</span><span class="ttl">what is assumed rather than read off</span></div>
 <p>The SGLD settings, the component counts, the corpus size and the A100 times are all taken from the two papers. Assumed here: that ESM-8M holds 10–20% of the card's bf16 peak, which is where a 7M parameter model on 240 token sequences tends to sit; that the SGLD settings of Pythia-14M carry over unchanged, which is the thing to tune first; that the evaluation batch for $L$ is 50k residues; and that the corpus annotation scales from the CPU hours in <a class="cite" data-ref="ref-Set26">[Set26]</a>.</p>
